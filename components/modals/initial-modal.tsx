@@ -1,14 +1,10 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import { FileUpload } from "@/components/file-upload";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +22,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FileUpload } from "@/components/file-upload";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -37,8 +37,9 @@ const formSchema = z.object({
 });
 
 export const InitialModal = () => {
-  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,34 +62,28 @@ export const InitialModal = () => {
       form.reset();
       router.refresh();
       window.location.reload();
-    } catch (error: unknown) {
-      console.error(error);
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  if (!isMounted) return null;
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Dialog open>
-      <DialogContent className="p-0 overflow-hidden" hideCloseIcon>
+      <DialogContent className="bg-white text-black p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold">
-            Create your server
+            Customize your server
           </DialogTitle>
-
           <DialogDescription className="text-center text-zinc-500">
-            Give your server a personality with a name and an image. You can
-            always change it later.
+            Give your server a personality with a name and an image. You can always change it later.
           </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-8"
-            autoCapitalize="off"
-            autoComplete="off"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-8 px-6">
               <div className="flex items-center justify-center text-center">
                 <FormField
@@ -103,8 +98,6 @@ export const InitialModal = () => {
                           onChange={field.onChange}
                         />
                       </FormControl>
-
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -115,32 +108,24 @@ export const InitialModal = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="uppercase text-xs font-bold text-zinc-500">
+                    <FormLabel className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
                       Server name
                     </FormLabel>
-
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        aria-disabled={isLoading}
-                        className="dark:bg-zinc-300/10 bg-zinc-300/50 border-0 dark:text-white text-black"
+                        className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
                         placeholder="Enter server name"
                         {...field}
                       />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
-            <DialogFooter className="px-6 py-4">
-              <Button
-                disabled={isLoading}
-                aria-disabled={isLoading}
-                variant="primary"
-              >
+            <DialogFooter className="bg-gray-100 px-6 py-4">
+              <Button variant="primary" disabled={isLoading}>
                 Create
               </Button>
             </DialogFooter>
