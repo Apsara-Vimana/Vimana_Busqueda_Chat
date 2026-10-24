@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import { db } from "@/lib/db";
 import { initialProfile } from "@/lib/initial-profile";
 
-const InitialModal = dynamic(
+const InitialModal = dynamicImport(
   () => import("@/components/modals/initial-modal").then((mod) => mod.InitialModal),
   { ssr: false }
 );
