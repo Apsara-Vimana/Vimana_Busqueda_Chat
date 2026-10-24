@@ -1,16 +1,9 @@
-"use client";
-import React from 'react';
-import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { initialProfile } from "@/lib/initial-profile";
 import { db } from "@/lib/db";
+import { InitialModal } from "@/components/modals/initial-modal";
 
 export const dynamic = "force-dynamic";
-
-// Carga dinámica que evita que Next.js pida el manifiesto de cliente en el servidor
-const SetupClient = dynamicImport(() => import("./setup-client"), {
-  ssr: false,
-});
 
 export default async function SetupPage() {
   const profile = await initialProfile();
@@ -29,5 +22,5 @@ export default async function SetupPage() {
     return redirect(`/servers/${server.id}`);
   }
 
-  return <SetupClient />;
+  return <InitialModal />;
 }
