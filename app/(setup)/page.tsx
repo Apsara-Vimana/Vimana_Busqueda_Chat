@@ -1,3 +1,6 @@
+"use client";
+import React from 'react';
+// ... el resto de tu código
 import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { initialProfile } from "@/lib/initial-profile";
