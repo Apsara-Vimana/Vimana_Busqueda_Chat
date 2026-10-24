@@ -22,5 +22,9 @@ export default async function SetupPage() {
     return redirect(`/servers/${server.id}`);
   }
 
-  return <InitialModal />;
+  return (
+    <div className="h-full flex items-center justify-center bg-background">
+      <InitialModal />
+    </div>
+  );
 }
