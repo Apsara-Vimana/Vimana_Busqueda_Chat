@@ -1,12 +1,12 @@
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { initialProfile } from "@/lib/initial-profile";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Evita que el servidor busque el manifiesto de cliente durante el SSR
-const SetupClient = dynamic(() => import("./setup-client"), {
+// Usamos dynamicImport para evitar el choque de nombres con 'export const dynamic'
+const SetupClient = dynamicImport(() => import("./setup-client"), {
   ssr: false,
 });
 
