@@ -1,21 +1,25 @@
-"use client";
+import { redirect } from "next/navigation";
+import { initialProfile } from "@/lib/initial-profile";
+import { db } from "@/lib/db";
+import { InitialModal } from "@/components/modals/initial-modal";
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
-import { InitialModal } from "@/components/modals/initial-modal";
-import { useRouter } from "next/navigation";
+export default async function SetupPage() {
+  const profile = await initialProfile();
 
-export default function SetupPage() {
-  const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
+  const server = await db.server.findFirst({
+    where: {
+      members: {
+        some: {
+          profileId: profile.id,
+        },
+      },
+    },
+  });
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
+  if (server) {
+    return redirect(`/servers/${server.id}`);
   }
 
   return <InitialModal />;
