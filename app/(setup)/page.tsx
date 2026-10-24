@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { initialProfile } from "@/lib/initial-profile";
 import { db } from "@/lib/db";
-import { InitialModal } from "@/components/modals/initial-modal";
+import { SetupClient } from "./setup-client";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +22,5 @@ export default async function SetupPage() {
     return redirect(`/servers/${server.id}`);
   }
 
-  return (
-    <div className="h-full flex items-center justify-center bg-background">
-      <InitialModal />
-    </div>
-  );
+  return <SetupClient />;
 }
