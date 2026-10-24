@@ -1,9 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { InitialModal } from "@/components/modals/initial-modal";
+import dynamic from "next/dynamic";
 import { db } from "@/lib/db";
 import { initialProfile } from "@/lib/initial-profile";
+
+const InitialModal = dynamic(
+  () => import("@/components/modals/initial-modal").then((mod) => mod.InitialModal),
+  { ssr: false }
+);
 
 export default async function SetupPage() {
   const profile = await initialProfile();
