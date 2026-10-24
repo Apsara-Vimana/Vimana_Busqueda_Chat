@@ -1,9 +1,14 @@
+import dynamicImport from "next/dynamic";
 import { redirect } from "next/navigation";
 import { initialProfile } from "@/lib/initial-profile";
 import { db } from "@/lib/db";
-import { SetupClient } from "./setup-client";
 
 export const dynamic = "force-dynamic";
+
+// Carga dinámica que evita que Next.js pida el manifiesto de cliente en el servidor
+const SetupClient = dynamicImport(() => import("./setup-client"), {
+  ssr: false,
+});
 
 export default async function SetupPage() {
   const profile = await initialProfile();
