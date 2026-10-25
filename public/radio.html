@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>Vimana Streaming Pro</title>
+  <style>
+    :root { --morado: #9d4edd; --oro: #ffbd00; }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: #000 !important;
+      color: #eee;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    .master-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 999;
+    }
+
+    .top-header {
+      text-align: center;
+      padding: 15px 0 5px;
+      color: var(--oro);
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .display-box {
+      margin: 10px;
+      padding: 10px;
+      border: 2px solid var(--morado);
+      border-radius: 10px;
+      background: #050505;
+      display: flex;
+      gap: 10px;
+      height: 100px;
+    }
+
+    .logo-v {
+      width: 70px; height: 70px;
+      border: 1px solid var(--oro);
+      background: url('imag/01.png') center/contain no-repeat;
+    }
+
+    .info-v { flex: 1; display: flex; flex-direction: column; }
+    .status-text { font-size: 10px; color: var(--oro); margin-bottom: 5px; font-family: monospace; }
+    
+    .canvas-container { flex: 1; background: #000; position: relative; border: 1px solid #222; }
+    #canvas { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+
+    .control-bar {
+      display: flex; justify-content: center; gap: 10px; padding: 10px;
+    }
+    .btn {
+      background: #111; color: #fff; border: 1px solid var(--morado);
+      padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 11px;
+    }
+    .playing { background: var(--oro) !important; color: #000 !important; }
+
+    .playlist-scroll {
+      flex: 1;
+      margin: 5px 10px 10px;
+      border: 1px solid #333;
+      background: #000;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .track-item {
+      padding: 12px;
+      border-bottom: 1px solid #111;
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .track-item.active { background: #111; color: var(--oro); border-left: 3px solid var(--oro); }
+
+    .footer-msg {
+      height: 25px; background: #000; border-top: 1px solid #222;
+      overflow: hidden; display: flex; align-items: center;
+      font-size: 10px; color: var(--oro); font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="master-wrapper">
+  <div class="top-header">Vimana Streaming Media Player</div>
+  <div class="display-box">
+    <div class="logo-v"></div>
+    <div class="info-v">
+      <div class="status-text">SISTEMA: <span id="npStation">IDLE</span></div>
+      <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button class="btn" id="playBtn">▶ PLAY</button>
+    <button class="btn" id="pauseBtn">⏸ PAUSE</button>
+    <button class="btn" id="stopBtn">⏹ STOP</button>
+  </div>
+
+  <div style="padding: 0 20px; display:flex; align-items:center; gap:10px;">
+    <span style="font-size:9px; color:var(--oro)">VOL</span>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" style="flex:1; accent-color:var(--morado)">
+  </div>
+
+  <div class="playlist-scroll" id="playlistContainer"></div>
+
+  <div class="footer-msg">
+    <marquee id="v-marquee" scrollamount="3">VIMANA CORE • CONECTANDO CON EL PRONÓSTICO AMÉRICAS...</marquee>
+  </div>
+</div>
+
+<audio id="audio" crossorigin="anonymous"></audio>
+
+<script>
+  const audio = document.getElementById('audio');
+  const playlistContainer = document.getElementById('playlistContainer');
+  const npStation = document.getElementById('npStation');
+  const playBtn = document.getElementById('playBtn');
+  
+  let audioCtx, analyser, source, canvas, ctx, initialized = false, currentSrc = "";
+
+ // LISTA ACTUALIZADA Y ORDENADA POR VIMANA CORE
+  const radioList = [
+    { name: "MYDOOM — LOUNGE", src: "https://mydoom666.radio.fm/md666-128k" },
+    { name: "NPO KLASSIEK — CLASICO", src: "https://icecast.omroep.nl/radio4-bb-mp3" },
+    { name: "CHILL CLOUD — RELAX", src: "https://ec6.yesstreaming.net:2370/stream" },
+    { name: "POPULAR CLASSICS", src: "https://radio.streemlion.com:1820/stream" },
+    { name: "RELAXATION RADIO 1", src: "https://ec6.yesstreaming.net:1520/stream" },
+    { name: "RELAXING RADIO 2", src: "https://puma.streemlion.com:2850/stream" },
+    { name: "CINEMIX — SOUNDTRACKS", src: "https://kathy.torontocast.com:1825/stream" },
+    { name: "NEW AGE MUSIC PLANET", src: "https://relaxingmusicradio247.com:3830/stream" },
+    { name: "SWISS JAZZ RADIO", src: "https://stream.srg-ssr.ch/m/rsj/mp3_128" },
+    { name: "MATT JOHNSON RADIO — INSTRUMENTAL", src: "http://us2.internet-radio.com:8046/stream/1/" },
+    { name: "HOLIDAY - INSTRUMENTAL", src: "http://listen.011fm.com:80/stream33" },
+    { name: "SOMA FM - ELECTRONIC", src: "http://ice1.somafm.com/fluid-128-mp3/" },
+    { name: "GOLD-INSTRUMENTAL", src: "http://199.233.234.34:25373/stream/1/" },
+    { name: "MOGUL JAZZ RADIO", src: "http://pstnet4.shoutcastnet.com:40520/stream" }
+  ];
+
+  function render() {
+    playlistContainer.innerHTML = "";
+    radioList.forEach((r, i) => {
+      const d = document.createElement('div');
+      d.className = 'track-item';
+      d.id = 'tr-' + i;
+      d.textContent = `${(i+1).toString().padStart(2,'0')}. ${r.name}`;
+      d.onclick = () => playRadio(i);
+      playlistContainer.appendChild(d);
+    });
+  }
+
+  function playRadio(i) {
+    document.querySelectorAll('.track-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('tr-' + i).classList.add('active');
+    
+    currentSrc = radioList[i].src;
+    npStation.textContent = radioList[i].name;
+    
+    if (window.parent !== window.self) {
+      window.parent.postMessage({ type: 'radioPlaying' }, '*');
+    }
+
+    if (!initialized) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      source = audioCtx.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      analyser.fftSize = 64;
+      canvas = document.getElementById('canvas');
+      ctx = canvas.getContext('2d');
+      initialized = true;
+      startVis();
+    }
+
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    // Reset de audio para limpiar buffers anteriores
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    
+    audio.src = currentSrc;
+    audio.play().catch(err => {
+      console.log("Error de conexión, intentando fallback...");
+      // Si falla, intentamos forzar el play nuevamente tras un breve delay
+      setTimeout(() => { audio.play(); }, 200);
+    });
+  }
+
+  function startVis() {
+    requestAnimationFrame(startVis);
+    if(!initialized) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    let barW = (canvas.width / 32) * 2;
+    for(let i=0; i<32; i++) {
+      let barH = data[i] / 3;
+      let grad = ctx.createLinearGradient(0, canvas.height - barH, 0, canvas.height);
+      grad.addColorStop(0, '#ffbd00');
+      grad.addColorStop(1, '#9d4edd');
+      ctx.fillStyle = grad;
+      ctx.fillRect(i * barW, canvas.height - barH, barW - 2, barH);
+    }
+  }
+
+  async function updateMarquee() {
+    const marquee = document.getElementById('v-marquee');
+    const puntos = [
+      {n: "MÉXICO DF", q: "Mexico+City"},
+      {n: "BELICE", q: "Belmopan"},
+      {n: "GUATEMALA", q: "Guatemala+City"},
+      {n: "EL SALVADOR", q: "San+Salvador"},
+      {n: "HONDURAS", q: "Tegucigalpa"},
+      {n: "NICARAGUA", q: "Managua"},
+      {n: "COSTA RICA", q: "San+Jose+CR"},
+      {n: "PANAMÁ", q: "Panama+City"},
+      {n: "COLOMBIA", q: "Bogota"},
+      {n: "VENEZUELA", q: "Caracas"},
+      {n: "PERÚ", q: "Lima"},
+      {n: "SURINAM", q: "Paramaribo"},
+      {n: "URUGUAY", q: "Montevideo"},
+      {n: "CHILE", q: "Santiago"},
+      {n: "ARGENTINA", q: "Buenos+Aires"}
+    ];
+    
+    let weatherText = "VIMANA CORE • PRONÓSTICO ACTUAL: ";
+    
+    try {
+      const promesas = puntos.map(p => 
+        fetch(`https://wttr.in/${p.q}?format=%t&lang=es`).then(r => r.text()).then(t => `${p.n}: ${t.trim()}`)
+      );
+      const resultados = await Promise.all(promesas);
+      weatherText += resultados.join(' | ') + " • ";
+    } catch (e) {
+      weatherText += "CONECTANDO CON EL UNIVERSO • ";
+    }
+    marquee.textContent = weatherText + "SINTONIZANDO VIBRACIÓN POSITIVA...";
+  }
+
+  playBtn.onclick = () => { if(currentSrc) audio.play(); };
+  document.getElementById('pauseBtn').onclick = () => audio.pause();
+  document.getElementById('stopBtn').onclick = () => { audio.pause(); audio.src = ""; npStation.textContent = "IDLE"; };
+  document.getElementById('volume').oninput = (e) => audio.volume = e.target.value;
+  audio.onplaying = () => playBtn.classList.add('playing');
+  audio.onpause = () => playBtn.classList.remove('playing');
+
+  render();
+  updateMarquee();
+</script>
+</body>
+</html>

@@ -3,228 +3,261 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="theme-color" content="#B0B8BF" />
   <title>Apsara Vimana — asistente de conversación</title>
-  <meta name="description" content="Conversa sobre música, arte, sabiduría y cultura védica con Apsara." />
+  <meta name="description" content="Conversa con Apsara sobre música, arte y sabiduría." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --background: oklch(98.5% 0.012 85);
-      --foreground: oklch(25% 0.04 265);
-      --card: #ffffff;
-      --border: oklch(90% 0.02 85);
-      --muted-foreground: oklch(52% 0.03 265);
-      --primary: oklch(32% 0.11 265);
-      --gold: oklch(68% 0.14 80);
-      --hero-ink: #f8f6f0;
-      --radius: 0.75rem;
+      --gray: #B0B8BF;
+      --text: #24313a;
+      --user: #e5edf3;
+      --bot: #f6f8f9;
       --green: #16a34a;
+      --ink: #f8f6f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
       font-family: Lora, Georgia, serif;
-      background: #0f1220;
-      color: var(--foreground);
       overflow: hidden;
+      background: #0d1520;
+      color: var(--text);
     }
 
-    /* Fondo hero (foto Apsara) */
-    .hero-layer {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    /* CAPA 0 — Foto Apsara (diseño intacto) */
+    #hero {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
     }
-    .hero-layer .blur {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; transform: scale(1.1); filter: blur(40px); opacity: 0.7;
+    #hero .blur {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scale(1.12);
+      filter: blur(36px);
+      opacity: 0.7;
     }
-    .hero-layer .main {
-      position: relative; width: 100%; height: 100%;
-      object-fit: contain; object-position: center top;
+    #hero .main {
+      position: relative;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      object-position: center top;
     }
-    .hero-veil {
+    #hero .veil {
       position: absolute; inset: 0;
       background: linear-gradient(
         to top,
-        rgba(15, 18, 32, 0.95) 0%,
-        rgba(15, 18, 32, 0.4) 40%,
-        rgba(15, 18, 32, 0.15) 100%
+        rgba(10, 14, 24, 0.75) 0%,
+        rgba(10, 14, 24, 0.2) 50%,
+        rgba(10, 14, 24, 0.1) 100%
       );
     }
 
-    .logo {
-      position: fixed; left: 1.25rem; top: 0.75rem; z-index: 50;
-      height: 2.25rem; width: 2.25rem; border-radius: 9999px;
-      object-fit: cover;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-      background: #111;
+    /* CAPA 1 — Pantalla gris claro (tapa SOLO el fondo) */
+    #gray-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: var(--gray);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.55s ease, visibility 0.55s ease;
+      pointer-events: none;
+    }
+    body.writing #gray-screen {
+      opacity: 1;
+      visibility: visible;
     }
 
-    .shell {
-      position: relative; z-index: 10;
-      height: 100%; max-width: 48rem; margin: 0 auto;
-      display: flex; flex-direction: column;
-      padding: 3.5rem 1.25rem 0;
+    /* CAPA 2 — Logo */
+    .logo {
+      position: fixed;
+      left: 1.1rem;
+      top: 0.7rem;
+      z-index: 30;
+      width: 2.1rem;
+      height: 2.1rem;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.28);
+    }
+
+    /* CAPA 3 — Chat (burbujas + barra) POR ENCIMA del gris */
+    .app {
+      position: relative;
+      z-index: 10;
+      height: 100%;
+      max-width: 42rem;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      padding: 3.2rem 1rem 0;
     }
 
     #conversation {
-      flex: 1 1 auto;
+      flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 0.5rem;
+      padding: 0 0.25rem 0.5rem;
     }
 
     .welcome {
-      min-height: 55vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-end;
-      text-align: center; padding-bottom: 1.5rem;
+      min-height: 42vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      text-align: center;
+      padding-bottom: 1.25rem;
+      transition: opacity 0.4s ease;
     }
-    .welcome.hidden { display: none; }
+    body.writing .welcome {
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+    }
     .welcome h1 {
       font-family: "Cormorant Garamond", serif;
-      font-size: clamp(2.75rem, 9vw, 3.75rem);
+      font-size: 1.55rem;
       font-weight: 600;
-      color: var(--hero-ink);
-      text-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      color: var(--ink);
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
     }
     .welcome p {
-      margin-top: 1rem; max-width: 36rem;
-      color: rgba(248, 246, 240, 0.9);
-      text-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      font-size: 1.05rem; line-height: 1.55;
+      margin-top: 0.4rem;
+      font-size: 0.9rem;
+      color: rgba(248,246,240,0.9);
+      text-shadow: 0 1px 8px rgba(0,0,0,0.35);
     }
 
-    .msg { display: flex; margin: 0 0 0.85rem; }
+    .msg { display: flex; margin-bottom: 0.75rem; }
     .msg.user { justify-content: flex-end; }
-    .msg.bot { justify-content: flex-start; gap: 0.55rem; align-items: flex-start; }
+    .msg.bot { justify-content: flex-start; gap: 0.45rem; align-items: flex-start; }
     .msg .avatar {
-      width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+      width: 2rem; height: 2rem; border-radius: 50%;
       object-fit: cover; flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,0.25);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      background: #c5ccd1;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
     }
     .bubble {
-      max-width: 85%;
-      padding: 0.75rem 1rem;
-      border-radius: 1.1rem;
-      font-size: 0.98rem;
-      line-height: 1.55;
+      max-width: 88%;
+      padding: 0.65rem 0.9rem;
+      border-radius: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
       white-space: pre-wrap;
       word-break: break-word;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      color: var(--text);
+      box-shadow: 0 2px 10px rgba(35,50,60,0.1);
     }
     .msg.user .bubble {
-      background: rgba(255, 248, 230, 0.96);
-      color: #1a1a22;
-      border-bottom-right-radius: 0.3rem;
+      background: var(--user);
+      border-bottom-right-radius: 0.25rem;
     }
     .msg.bot .bubble {
-      background: var(--card);
-      color: #1a1a22;
-      border-bottom-left-radius: 0.3rem;
+      background: var(--bot);
+      border-bottom-left-radius: 0.25rem;
     }
-    .links { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .links { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
     .link-card {
       display: block; text-decoration: none; color: #1a3a5c;
-      background: #fff; border-radius: 0.75rem;
-      padding: 0.55rem 0.75rem; border: 1px solid rgba(0,0,0,0.08);
+      background: #fff; border-radius: 0.65rem;
+      padding: 0.45rem 0.65rem; border: 1px solid rgba(0,0,0,0.07);
     }
-    .link-title { font-weight: 600; font-size: 0.85rem; display: block; }
-    .link-url { font-size: 0.72rem; color: #666; display: block; }
+    .link-title { font-weight: 600; font-size: 0.8rem; display: block; }
+    .link-url { font-size: 0.68rem; color: #666; display: block; }
 
-    .composer-area {
+    .composer-wrap {
       flex-shrink: 0;
-      padding: 0.35rem 0 calc(1rem + env(safe-area-inset-bottom));
+      z-index: 20;
+      padding: 0.35rem 0 calc(0.85rem + env(safe-area-inset-bottom));
     }
     #typing {
-      height: 1.25rem;
-      margin: 0 auto 0.25rem;
-      max-width: 42rem;
+      height: 1.1rem; max-width: 40rem; margin: 0 auto 0.2rem;
       text-align: right;
       font-family: "Cormorant Garamond", serif;
-      font-size: 0.75rem;
-      font-style: italic;
-      color: var(--gold);
+      font-size: 0.72rem; font-style: italic;
+      color: rgba(248,246,240,0.75);
+      transition: color 0.4s ease;
     }
+    body.writing #typing { color: #6b5a1e; }
+
     #composer {
-      margin: 0 auto;
-      max-width: 42rem;
-      display: flex; align-items: flex-end; gap: 0.5rem;
-      border-radius: 1.5rem;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(255,255,255,0.95);
-      padding: 0.4rem 0.4rem 0.4rem 1.15rem;
-      box-shadow: 0 10px 36px rgba(0,0,0,0.28);
+      max-width: 40rem; margin: 0 auto;
+      display: flex; align-items: flex-end; gap: 0.45rem;
+      background: #fff;
+      border: 1.5px solid #9cc8e6;
+      border-radius: 1.4rem;
+      padding: 0.35rem 0.35rem 0.35rem 1rem;
+      box-shadow: 0 5px 18px rgba(45,61,72,0.14);
     }
     #message {
       flex: 1; border: 0; outline: 0; resize: none;
-      background: transparent; color: #1a1a22;
-      font-size: 1rem; line-height: 1.45;
-      max-height: 10rem; padding: 0.55rem 0;
+      background: transparent; color: var(--text);
+      font-size: 0.95rem; line-height: 1.4;
+      max-height: 8rem; padding: 0.5rem 0;
       font-family: inherit;
     }
-    #message::placeholder { color: #7a7a88; }
+    #message::placeholder { color: #7a8690; }
     #send {
-      width: 2.75rem; height: 2.75rem;
-      border: 0; border-radius: 9999px;
+      width: 2.5rem; height: 2.5rem;
+      border: 0; border-radius: 50%;
       background: var(--green); color: #fff;
       cursor: pointer; display: grid; place-items: center;
-      flex-shrink: 0; transition: transform 0.15s, opacity 0.15s;
+      flex-shrink: 0;
     }
-    #send:hover:not(:disabled) { transform: scale(1.05); }
     #send:disabled { opacity: 0.4; cursor: default; }
-    #send svg { width: 1.25rem; height: 1.25rem; stroke: #fff; }
-    .hint {
-      margin: 0.5rem auto 0;
-      max-width: 42rem;
-      text-align: center;
-      font-size: 0.75rem;
-      color: rgba(248,246,240,0.55);
-    }
+    #send svg { width: 1.15rem; height: 1.15rem; stroke: #fff; }
   </style>
 </head>
 <body>
-  <!-- Fondo: foto local (sin Lovable) -->
-  <div class="hero-layer" aria-hidden="true">
-    <img class="blur" src="imagenes/estados/apsara_hero.jpg" alt="" />
-    <img class="main" src="imagenes/estados/apsara_hero.jpg" alt="" />
-    <div class="hero-veil"></div>
+  <!-- Fondo: foto intacta -->
+  <div id="hero" aria-hidden="true">
+    <img class="blur" src="index_files/2_fBUK.jpg" alt="" />
+    <img class="main" src="index_files/2_fBUK.jpg" alt="" />
+    <div class="veil"></div>
   </div>
 
-  <img class="logo" src="imagenes/estados/logo_vimana.png" alt="Vimana"
+  <!-- Pantalla gris: tapa el fondo al escribir; NO tapa burbujas ni barra -->
+  <div id="gray-screen" aria-hidden="true"></div>
+
+  <img class="logo" src="index_files/logo_fBUK.png" alt="Vimana"
        onerror="this.style.display='none'" />
 
-  <div class="shell">
+  <div class="app">
     <div id="conversation">
-      <section class="welcome" id="welcome">
-        <h1>Namaste 🌺</h1>
-        <p>Estoy aquí para conversar contigo sobre música, arte, sabiduría y contenidos de la cultura védica.</p>
-      </section>
+      <div class="welcome" id="welcome">
+        <h1></h1>
+        <p></p>
+      </div>
     </div>
 
-    <div class="composer-area">
+    <div class="composer-wrap">
       <p id="typing"></p>
       <form id="composer" autocomplete="off">
         <textarea id="message" rows="1" maxlength="600" placeholder="Escribe tu mensaje..." enterkeyhint="send"></textarea>
         <button type="submit" id="send" aria-label="Enviar" disabled>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m12 5 7 7-7 7"></path>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
           </svg>
         </button>
       </form>
-      <p class="hint">Apsara Vimana · local + búsqueda gratuita</p>
     </div>
   </div>
 
   <script>
   (function () {
-    /* API del super-agente en el mismo dominio (Render Node) */
     var API = '/api/chat';
     var conversation = document.getElementById('conversation');
-    var welcome = document.getElementById('welcome');
     var form = document.getElementById('composer');
     var message = document.getElementById('message');
     var sendBtn = document.getElementById('send');
@@ -237,17 +270,17 @@
       if (text != null) e.textContent = text;
       return e;
     }
-
     function scrollBottom() {
       conversation.scrollTop = conversation.scrollHeight;
     }
 
-    function hideWelcome() {
-      if (welcome) welcome.classList.add('hidden');
+    /** Al escribir en la barra: pantalla gris cubre el fondo (HTML5 / CSS) */
+    function activarPantallaGris() {
+      document.body.classList.add('writing');
     }
 
     function userBubble(text) {
-      hideWelcome();
+      activarPantallaGris();
       var row = el('div', 'msg user');
       row.appendChild(el('div', 'bubble', text));
       conversation.appendChild(row);
@@ -255,22 +288,20 @@
     }
 
     function botBubble(data) {
-      hideWelcome();
+      activarPantallaGris();
       var row = el('div', 'msg bot');
       var av = el('img', 'avatar');
-      av.src = (data && data.image) || 'imagenes/estados/apsara_hero.jpg';
+      av.src = (data && data.image) || 'index_files/2_fBUK.jpg';
       av.alt = 'Apsara';
       row.appendChild(av);
       var col = document.createElement('div');
-      col.style.maxWidth = '85%';
+      col.style.maxWidth = '88%';
       col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
-      if (data && Array.isArray(data.links) && data.links.length) {
+      if (data && data.links && data.links.length) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
           var a = el('a', 'link-card');
-          a.href = L.u;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
+          a.href = L.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
           a.appendChild(el('span', 'link-title', L.t || L.u));
           a.appendChild(el('span', 'link-url', String(L.u || '').replace(/^https?:\/\//, '')));
           list.appendChild(a);
@@ -305,41 +336,38 @@
         var data = await r.json();
         botBubble(data);
       } catch (e) {
-        botBubble({
-          reply: 'No pude completar la respuesta. Inténtalo de nuevo en unos segundos.',
-          image: 'imagenes/estados/apsara_hero.jpg',
-          links: []
-        });
+        botBubble({ reply: 'No pude completar la respuesta. Inténtalo de nuevo.', links: [] });
       } finally {
         setBusy(false);
         message.focus();
       }
     }
 
-    form.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      enviar();
-    });
-
+    /* En el mismo instante que escribe → gris */
     message.addEventListener('input', function () {
+      if (message.value.length > 0) activarPantallaGris();
       message.style.height = 'auto';
-      message.style.height = Math.min(message.scrollHeight, 160) + 'px';
+      message.style.height = Math.min(message.scrollHeight, 128) + 'px';
       sendBtn.disabled = busy || !message.value.trim();
     });
-
-    message.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Enter' && !ev.shiftKey) {
-        ev.preventDefault();
+    message.addEventListener('keydown', function (e) {
+      if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
+        if (message.value.length > 0 || e.key.length === 1) activarPantallaGris();
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         enviar();
       }
     });
 
-    /* Keep-awake suave en plan free de Render */
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      enviar();
+    });
+
     setInterval(function () {
-      if (document.visibilityState === 'visible') {
-        fetch('/api/ping').catch(function () {});
-      }
-    }, 10 * 60 * 1000);
+      if (document.visibilityState === 'visible') fetch('/api/ping').catch(function () {});
+    }, 600000);
   })();
   </script>
 </body>
