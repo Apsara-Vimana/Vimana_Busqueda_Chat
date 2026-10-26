@@ -1,50 +1,23 @@
 /* =========================================================
-   Vimana Music - Sistema de Reproducción para Podcasts (x.js)
+   Podcast Vimana - Sistema de Reproducción (x.js)
    ========================================================= */
 
-const PLAYLIST_DATA = [
-  {
-    albumId: 'podcasts',
-    albumTitle: 'Podcasts Vimana',
-    cover: './podcast_files/vimana-logo_mo_p.png',
-    folder: 'PODCAST/',
-    tracks: [
-      { num: 1, file: 'VIMANA1.mp3', title: 'Conexión', artist: 'Podcasts Vimana' },
-      { num: 2, file: 'VIMANA2.mp3', title: 'Maha Shivaratri', artist: 'Podcasts Vimana' },
-      { num: 3, file: 'VIMANA3.mp3', title: 'Derrumbe de Paradigmas Despertar - era de acuario', artist: 'Podcasts Vimana' },
-      { num: 4, file: 'VIMANA4.mp3', title: 'La verdadera revolución es interna -El gran reset', artist: 'Podcasts Vimana' },
-      { num: 5, file: 'VIMANA5.mp3', title: 'La Verdad Te Libera - Inmortales En La Verdad', artist: 'Podcasts Vimana' },
-      { num: 6, file: 'VIMANA6.mp3', title: 'Manifestacion Divina - Super Inteligencia', artist: 'Podcasts Vimana' },
-      { num: 7, file: 'VIMANA7.mp3', title: 'Deja de Curarte', artist: 'Podcasts Vimana' },
-      { num: 8, file: 'VIMANA8.mp3', title: 'Del Quantum al Purana', artist: 'Podcasts Vimana' },
-      { num: 9, file: 'VIMANA9.mp3', title: 'Ya eres lo que buscas', artist: 'Podcasts Vimana' },
-      { num: 10, file: 'VIMANA10.mp3', title: 'El Arte de la Rendición Divina', artist: 'Podcasts Vimana' },
-      { num: 11, file: 'VIMANA11.mp3', title: 'Guru Purnima 2026', artist: 'Podcasts Vimana' },
-      { num: 12, file: 'VIMANA12.mp3', title: 'SOL ES LA VIDA Y LA CONCIENCIA (GAYATRI)', artist: 'Podcasts Vimana' },
-      { num: 13, file: 'VIMANA13.mp3', title: 'LO QUE TODOS DEBERÍAMOS SABER SOBRE NUESTRA PAZ', artist: 'Podcasts Vimana' },
-      { num: 14, file: 'VIMANA14.mp3', title: '¿Quién soy cuando desaparece el \'yo\'?', artist: 'Podcasts Vimana' },
-      { num: 15, file: 'VIMANA15.mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' },
-      { num: 16, file: 'VIMANA16.mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' },
-      { num: 17, file: 'VIMANA17..mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' },
-      { num: 18, file: 'VIMANA18.mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' },
-      { num: 19, file: 'VIMANA19.mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' },
-      { num: 20, file: 'VIMANA20.mp3', title: 'vimana podcast', artist: 'Podcasts Vimana' }
-    ]
-  }
+const PODCAST_PLAYLIST = [
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA1.mp3", title: "Despertar de la Mente", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA2.mp3", title: "Geometría del Corazón", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA3.mp3", title: "Expansión Consciente", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA4.mp3", title: "El Eco del Silencio", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA5.mp3", title: "Armonía Universal", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA6.mp3", title: "El Latido Cuántico", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA7.mp3", title: "Senderos del Alma", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA8.mp3", title: "Retorno al Origen", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA9.mp3", title: "Ya eres lo que buscas", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA10.mp3", title: "El Arte de la Rendición Divina", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA11.mp3", title: "Vimana Transmisión Final", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA12.mp3", title: "SOL ES LA VIDA Y LA CONCIENCIA Y GAYATRI", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA13.mp3", title: "LO QUE TODOS DEBERÍAMOS SABER SOBRE NUESTRA PAZ", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" },
+  { file: "https://vimana.rf.gd/PODCAST/VIMANA14.mp3", title: "¿Quién soy cuando desaparece el 'yo'?", artist: "Podcast Vimana", cover: "./podcast_files/vimana-logo_mo_p.png" }
 ];
-
-let FLAT_PLAYLIST = [];
-PLAYLIST_DATA.forEach((album) => {
-  album.tracks.forEach((track) => {
-    FLAT_PLAYLIST.push({
-      src: album.folder + track.file,
-      title: track.title,
-      artist: track.artist,
-      cover: album.cover,
-      albumTitle: album.albumTitle
-    });
-  });
-});
 
 let currentIndex = 0;
 let audio = new Audio();
@@ -63,14 +36,10 @@ function initPlayerBar() {
   const durationTimeEl = document.getElementById('player-duration');
   const volumeSlider = document.getElementById('player-volume');
 
-  audio.addEventListener('ended', () => {
-    nextTrack();
-  });
-
+  audio.addEventListener('ended', nextTrack);
   audio.addEventListener('timeupdate', () => {
     if (audio.duration) {
-      const pct = (audio.currentTime / audio.duration) * 100;
-      progressBar.value = pct;
+      progressBar.value = (audio.currentTime / audio.duration) * 100;
       currentTimeEl.textContent = formatTime(audio.currentTime);
       durationTimeEl.textContent = formatTime(audio.duration);
     }
@@ -78,16 +47,12 @@ function initPlayerBar() {
 
   if (progressBar) {
     progressBar.addEventListener('input', (e) => {
-      if (audio.duration) {
-        audio.currentTime = (e.target.value / 100) * audio.duration;
-      }
+      if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
     });
   }
 
   if (volumeSlider) {
-    volumeSlider.addEventListener('input', (e) => {
-      audio.volume = e.target.value;
-    });
+    volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value; });
   }
 
   if (playBtn) playBtn.addEventListener('click', togglePlay);
@@ -96,11 +61,10 @@ function initPlayerBar() {
 }
 
 function loadTrack(index, autoplay = true) {
-  if (index < 0 || index >= FLAT_PLAYLIST.length) return;
-  const track = FLAT_PLAYLIST[index];
-
+  if (index < 0 || index >= PODCAST_PLAYLIST.length) return;
+  const track = PODCAST_PLAYLIST[index];
   currentIndex = index;
-  audio.src = track.src;
+  audio.src = track.file;
   audio.load();
 
   document.getElementById('player-cover').src = track.cover;
@@ -108,37 +72,25 @@ function loadTrack(index, autoplay = true) {
   document.getElementById('player-artist').textContent = track.artist;
   document.getElementById('vimana-player-bar').classList.remove('hidden');
 
-  updateTrackHighlight();
-
-  if (autoplay) {
-    audio.play().then(() => updatePlayIcon(true)).catch(() => updatePlayIcon(false));
-  }
+  updateHighlight();
+  if (autoplay) audio.play().then(() => updatePlayIcon(true)).catch(() => updatePlayIcon(false));
 }
 
 function togglePlay() {
-  if (!audio.src) {
-    loadTrack(0, true);
-    return;
-  }
-  if (audio.paused) {
-    audio.play();
-    updatePlayIcon(true);
-  } else {
-    audio.pause();
-    updatePlayIcon(false);
-  }
+  if (!audio.src) { loadTrack(0, true); return; }
+  if (audio.paused) { audio.play(); updatePlayIcon(true); } else { audio.pause(); updatePlayIcon(false); }
 }
 
 function prevTrack() {
-  let prevIdx = currentIndex - 1;
-  if (prevIdx < 0) prevIdx = FLAT_PLAYLIST.length - 1;
-  loadTrack(prevIdx, true);
+  let idx = currentIndex - 1;
+  if (idx < 0) idx = PODCAST_PLAYLIST.length - 1;
+  loadTrack(idx, true);
 }
 
 function nextTrack() {
-  let nextIdx = currentIndex + 1;
-  if (nextIdx >= FLAT_PLAYLIST.length) nextIdx = 0;
-  loadTrack(nextIdx, true);
+  let idx = currentIndex + 1;
+  if (idx >= PODCAST_PLAYLIST.length) idx = 0;
+  loadTrack(idx, true);
 }
 
 function updatePlayIcon(isPlaying) {
@@ -152,13 +104,9 @@ function updatePlayIcon(isPlaying) {
 }
 
 function initTrackButtons() {
-  const elements = document.querySelectorAll('[data-track-index]');
-  elements.forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const attr = el.getAttribute('data-track-index');
-      if (attr === null) return;
-      const idx = parseInt(attr, 10);
+  document.querySelectorAll('[data-track-index]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-track-index'), 10);
       if (currentIndex === idx && !audio.paused) {
         audio.pause();
         updatePlayIcon(false);
@@ -169,23 +117,16 @@ function initTrackButtons() {
   });
 }
 
-function updateTrackHighlight() {
-  document.querySelectorAll('.track-row').forEach((row) => {
-    const attr = row.getAttribute('data-track-index');
-    if (attr !== null) {
-      const idx = parseInt(attr, 10);
-      if (idx === currentIndex) {
-        row.classList.add('bg-accent');
-      } else {
-        row.classList.remove('bg-accent');
-      }
-    }
+function updateHighlight() {
+  document.querySelectorAll('.track-row').forEach((row, idx) => {
+    if (idx === currentIndex) row.classList.add('bg-accent');
+    else row.classList.remove('bg-accent');
   });
 }
 
-function formatTime(seconds) {
-  if (isNaN(seconds)) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+function formatTime(secs) {
+  if (isNaN(secs)) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 }

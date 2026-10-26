@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Buscar música | Vimana Music</title>
+  <title>Catálogo Completo | Vimana Music</title>
   <meta name="author" content="Vimana Music">
-  <meta name="description" content="Explora música clásica, gregoriana, zen, instrumental y sonidos para relajación en Vimana Music.">
-  <meta property="og:title" content="Buscar música | Vimana Music">
-  <meta property="og:description" content="Explora música clásica, gregoriana, zen, instrumental y sonidos para relajación en Vimana Music.">
+  <meta name="description" content="Explora todos los álbumes, bhajans, sadhana y podcasts de Vimana Music.">
+  <meta property="og:title" content="Catálogo Completo | Vimana Music">
+  <meta property="og:description" content="Explora todos los álbumes, bhajans, sadhana y podcasts de Vimana Music.">
   <meta property="og:type" content="website">
 
   <!-- Hoja de Estilos oficial -->
@@ -17,50 +17,6 @@
     #vimana-player-bar {
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
     }
-    .menu-dropdown-container {
-      position: relative;
-    }
-    .menu-dropdown-content {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 320px;
-      max-height: 380px;
-      overflow-y: auto;
-      background-color: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 0.375rem;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-      z-index: 50;
-      padding: 0.5rem 0;
-    }
-    .menu-dropdown-container.open .menu-dropdown-content {
-      display: block;
-    }
-    .menu-dropdown-item {
-      display: block;
-      padding: 0.5rem 1rem;
-      font-size: 0.8125rem;
-      color: var(--foreground);
-      transition: background-color 0.15s ease;
-      cursor: pointer;
-    }
-    .menu-dropdown-item:hover {
-      background-color: var(--accent);
-      color: var(--secondary);
-    }
-    .menu-category-header {
-      padding: 0.4rem 1rem 0.2rem;
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--secondary);
-      border-top: 1px solid var(--border);
-    }
-    .menu-category-header:first-child {
-      border-top: none;
-    }
   </style>
 </head>
 <body class="bg-background text-foreground min-h-screen pb-24">
@@ -69,10 +25,6 @@
   <header class="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
     <div class="h-1 bg-secondary"></div>
     <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-      <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent md:hidden" aria-label="Abrir menú">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
-      </button>
-      
       <a href="#" class="flex shrink-0 items-center gap-2" aria-label="Vimana Music">
         <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Emblema de Vimana" class="h-10 w-10 object-contain">
         <span class="text-xl font-black uppercase text-foreground">Vimana</span>
@@ -81,134 +33,21 @@
       <!-- Buscador -->
       <form class="relative min-w-0 flex-1" onsubmit="event.preventDefault();">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
-        <input placeholder="Buscar artistas, pistas, sellos..." aria-label="Buscar música" class="h-10 w-full rounded-full border border-input bg-background py-2 pl-10 pr-4 text-sm outline-none focus:border-secondary focus:ring-1 focus:ring-secondary">
+        <input placeholder="Buscar pistas, álbumes, podcasts..." aria-label="Buscar música" class="h-10 w-full rounded-full border border-input bg-background py-2 pl-10 pr-4 text-sm outline-none focus:border-secondary focus:ring-1 focus:ring-secondary">
       </form>
-
-      <button class="inline-flex items-center justify-center rounded-md p-2 hover:bg-accent" aria-label="Cuenta">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </button>
     </div>
 
-    <!-- Navegación por Categorías (Lenguetas) -->
-    <nav class="hidden mx-auto max-w-7xl border-t border-border px-4 md:flex md:flex-row">
-      
-      <!-- Pestaña Clásica (Sustituida con YouTube Music) -->
-      <div class="menu-dropdown-container">
-        <button class="menu-dropdown-btn inline-flex items-center gap-2 py-3 px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          Clásica <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-content">
-          <div class="menu-category-header">Música Clásica (YouTube Music)</div>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Mozart+Essential">W. A. Mozart - Obras Maestras</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Bach+Best+Classical">J. S. Bach - Selección Clásica</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Beethoven+Symphonies">L. v. Beethoven - Sinfonías e Instrumentales</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Chopin+Piano+Solo">Frédéric Chopin - Piano Solo</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Vivaldi+Baroque">Antonio Vivaldi - Obras Barrocas</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Debussy+Impressionism">Claude Debussy - Obras Impresionistas</a>
-          <a class="menu-dropdown-item" data-yt-url="https://music.youtube.com/search?q=Tchaikovsky+Ballet">P. I. Tchaikovsky - Grandes Ballets</a>
-        </div>
-      </div>
-
-      <!-- Pestaña Gregoriana & Zen -->
-      <div class="menu-dropdown-container">
-        <button class="menu-dropdown-btn inline-flex items-center gap-2 py-3 px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          Gregoriana & Zen <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-content">
-          <div class="menu-category-header">Música Gregoriana</div>
-          <a class="menu-dropdown-item" data-yt-id="gKVEQ5Edad8">Kevin MacLeod - Gregorian Chant</a>
-          <a class="menu-dropdown-item" data-yt-id="J50CjLzuoSk">Kevin MacLeod - Dark Gregorian Chant</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Darren+Curtis+Cantos+Gregorianos+Sin+Copyright">Darren Curtis - Cantos Gregorianos Sin Copyright</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Matti+Paalanen+Gregorian+Chants+Ambience">Matti Paalanen - Gregorian Chants Ambience</a>
-
-          <div class="menu-category-header">Mantras</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Yellow+Tunes+OM+Chanting+Powerful+Mantra">Yellow Tunes - OM Chanting Powerful Mantra</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Yellow+Tunes+Guru+Mantra+Morning+Positive+Energy">Yellow Tunes - Guru Mantra Morning Positive Energy</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Yellow+Tunes+Shanti+Indian+Mantra+Vocals">Yellow Tunes - Shanti Indian Mantra Vocals</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Yellow+Tunes+Gayatri+Mantra+Indian+Fusion">Yellow Tunes - Gayatri Mantra Indian Fusion</a>
-          <a class="menu-dropdown-item" data-yt-id="XUaoNHyZUlY">Mahakatha - Shiva Mantra</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Meditation+Tunes+Maha+Mrityunjaya+Mantra">Meditation Tunes - Maha Mrityunjaya Mantra</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Spiritual+Sound+Ganesh+Mantra">Spiritual Sound - Ganesh Mantra</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Healing+Waves+Lokah+Samastah+Sukhino+Bhavantu">Healing Waves - Lokah Samastah Sukhino Bhavantu</a>
-
-          <div class="menu-category-header">Música Zen y Relajación</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Alex-Productions+Free+Meditation+Music">Alex-Productions - Free Meditation Music</a>
-          <a class="menu-dropdown-item" data-yt-id="rX8JJonqdzg">Bensound - Relaxing Meditation Royalty Free Music</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Liborio+Conti+Zen+Garden+Meditation+Music">Liborio Conti - Zen Garden Meditation Music</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Chris+Collins+Deep+Zen+Flute+Meditation">Chris Collins - Deep Zen Flute Meditation</a>
-        </div>
-      </div>
-
-      <!-- Pestaña Instrumental -->
-      <div class="menu-dropdown-container">
-        <button class="menu-dropdown-btn inline-flex items-center gap-2 py-3 px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          Instrumental <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-content">
-          <div class="menu-category-header">Nueva Era e Instrumental Andino</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Carlos+Carty+Native+American+Andean+Music+for+Licensing">Carlos Carty - Native American / Andean Music</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=TunePocket+Andean+Music+For+Video+Vlogs">TunePocket - Andean Music For Video & Vlogs</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Carlos+Carty+El+Condor+Pasa">Carlos Carty - El Condor Pasa</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Liborio+Conti+New+Age+Cinematic+Ambient">Liborio Conti - New Age Cinematic Ambient</a>
-
-          <div class="menu-category-header">Instrumental Pop</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=BreakingCopyright+Pop+Instrumental+Cover+No+Copyright">BreakingCopyright - Pop Instrumental Cover</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=ChilledCow+Pop+Beats+Royalty+Free">ChilledCow - Pop Beats Royalty Free</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Audio+Library+Pop+Instrumental+Vlogs">Audio Library - Pop Instrumental Vlogs</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=FASSounds+Cinematic+Pop+Instrumental">FASSounds - Cinematic Pop Instrumental</a>
-        </div>
-      </div>
-
-      <!-- Pestaña Sonidos & Jazz (Sin Ocean Waves Relaxation) -->
-      <div class="menu-dropdown-container">
-        <button class="menu-dropdown-btn inline-flex items-center gap-2 py-3 px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          Sonidos & Jazz <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-content">
-          <div class="menu-category-header">Sonidos de la Naturaleza</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Nature+Relaxation+Rainstorm+Audio+Thunder">Nature Relaxation - Rainstorm Audio & Thunder</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Calmed+by+Nature+Forest+Birdsong+Ambience">Calmed by Nature - Forest Birdsong Ambience</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Nature+Soundscapes+Gentle+River+Streams">Nature Soundscapes - Gentle River Streams</a>
-
-          <div class="menu-category-header">Jazz y Chill</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Lofi+Girl+Cozy+Cafe+Jazz+Beats">Lofi Girl - Cozy Café Jazz Beats</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Bensound+Jazz+Chill+Royalty+Free">Bensound - Jazz & Chill Royalty Free</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Jazz+Hop+Cafe+Midnight+Jazz+BGM">Jazz Hop Cafe - Midnight Jazz BGM</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Eric+Christian+Slow+Jazz+Piano+No+Copyright">Eric Christian - Slow Jazz & Piano No Copyright</a>
-        </div>
-      </div>
-
-      <!-- Pestaña Devocional -->
-      <div class="menu-dropdown-container">
-        <button class="menu-dropdown-btn inline-flex items-center gap-2 py-3 px-4 text-xs font-semibold text-muted-foreground hover:text-foreground">
-          Devocional <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-content">
-          <div class="menu-category-header">Bhajans y Cantos Sagrados</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Famous+Audio+Library+Devotional+Background+Music+Krishna+Flute">Famous Audio Library - Krishna Flute</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Bank+Of+Sounds+NCS+Devotional+Sitar+Tabla+Music+No+Copyright">Bank Of Sounds NCS - Devotional Sitar & Tabla</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Spiritual+Beats+Hanuman+Chalisa+Instrumental">Spiritual Beats - Hanuman Chalisa Instrumental</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Indian+Royalty+Free+Traditional+Temple+Bhajan+Music">Indian Royalty Free - Temple Bhajan Music</a>
-
-          <div class="menu-category-header">Villancicos Instrumentales</div>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Kevin+MacLeod+Jingle+Bells+Christmas+Background">Kevin MacLeod - Jingle Bells Christmas</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=BreakingCopyright+Relaxing+Christmas+Piano+BGM">BreakingCopyright - Relaxing Christmas Piano</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Liborio+Conti+Traditional+Christmas+Carols+Instrumental">Liborio Conti - Christmas Carols Instrumental</a>
-          <a class="menu-dropdown-item" data-yt-url="https://www.youtube.com/results?search_query=Audio+Library+Upbeat+Christmas+Instrumental+No+Copyright">Audio Library - Upbeat Christmas Instrumental</a>
-        </div>
-      </div>
-
-    </nav>
+    <nav class="hidden mx-auto max-w-7xl border-t border-border px-4 md:flex md:flex-row"></nav>
   </header>
 
-  <!-- Contenido Principal de Álbumes y Pistas -->
+  <!-- Contenido Principal -->
   <main class="mx-auto max-w-7xl px-4 py-8">
     <div class="border-l-4 border-primary pl-4">
       <p class="text-xs font-bold uppercase text-secondary">Vimana Music</p>
-      <h1 class="mt-1 text-3xl font-bold">Catálogo de Reproducción</h1>
+      <h1 class="mt-1 text-3xl font-bold">Catálogo de Reproducción Completo</h1>
     </div>
 
-    <!-- ÁLBUM 1: ANANDA -->
+    <!-- ÁLBUM 1: ANANDA (Índices 0 - 9) -->
     <section class="mt-10">
       <h2 class="mb-4 text-xl font-semibold text-secondary">Pistas Álbum Ananda</h2>
       <div class="divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
@@ -216,97 +55,97 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">1</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="0">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="0" data-file="https://vimana.rf.gd/ANANDA/7.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Sat Chit Ananda - Inglés</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">1- Sat Chit Ananda - ingles</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">2</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="1">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="1" data-file="https://vimana.rf.gd/ANANDA/2.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Sat Chit Ananda Dicha Suprema</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">2- Sat Chit Ananda Dicha Suprema</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">3</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="2">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="2" data-file="https://vimana.rf.gd/ANANDA/3.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">De la Tercera a 5ª Dimensión + 5ª Frecuencia</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">3- De La Tercera a, 5ª Dimension + 5ª Frecuencia</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">4</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="3">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="3" data-file="https://vimana.rf.gd/ANANDA/4.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Aham Brahmasmi</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">4- Aham Brahmasmi</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">5</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="4">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="4" data-file="https://vimana.rf.gd/ANANDA/1.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Sat Chit Ananda - Español</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">5- Sat Chit Ananda - Español</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">6</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="5">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="5" data-file="https://vimana.rf.gd/ANANDA/8.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Shivo Ham, Uno con El Supremo</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">6- Shivo Ham, Uno con El Supremo</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">7</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="6">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="6" data-file="https://vimana.rf.gd/ANANDA/9.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Ayam Atma Brahma</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">7- Ayam Atma Brahma</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">8</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="7">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="7" data-file="https://vimana.rf.gd/ANANDA/10.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Despertamos al Amanecer Dorado</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">8- Despertamos al Amanecer Dorado</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">9</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="8">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="8" data-file="https://vimana.rf.gd/ANANDA/5.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Nueva Era Dorada - El Retorno 1</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">9- Nueva Era Dorada - El Retorno 1</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">10</span>
           <img src="VimanaMusic2_files/SatChitAnanda_mo_p.png" alt="Portada Ananda" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="9">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="9" data-file="https://vimana.rf.gd/ANANDA/6.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Nueva Era Dorada - El Retorno 2</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">10- Nueva Era Dorada - El Retorno 2</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Vimana</span></div>
         </div>
 
       </div>
     </section>
 
-    <!-- ÁLBUM 2: DIVINAVERSUM -->
+    <!-- ÁLBUM 2: DIVINAVERSUM (Índices 10 - 19) -->
     <section class="mt-10">
       <h2 class="mb-4 text-xl font-semibold text-secondary">Pistas Álbum Divinaversum</h2>
       <div class="divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
@@ -314,7 +153,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">1</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="10">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="10" data-file="https://vimana.rf.gd/unmundounafamilia/01.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Un mundo una familia somos uno</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
@@ -323,7 +162,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">2</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="11">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="11" data-file="https://vimana.rf.gd/unmundounafamilia/02.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">One world one family, juntos brillamos mas</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Era Dorada Gracia Celestial</span></div>
@@ -332,7 +171,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">3</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="12">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="12" data-file="https://vimana.rf.gd/unmundounafamilia/03.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Lokah samastah sukhino bhavantu</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">One World One Family</span></div>
@@ -341,7 +180,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">4</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="13">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="13" data-file="https://vimana.rf.gd/unmundounafamilia/04.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Un mundo una familia valores y cualidades divinos</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
@@ -350,7 +189,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">5</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="14">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="14" data-file="https://vimana.rf.gd/unmundounafamilia/05.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Los cantos sagrados nos unen en armonia</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Era Dorada Gracia Celestial</span></div>
@@ -359,7 +198,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">6</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="15">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="15" data-file="https://vimana.rf.gd/unmundounafamilia/06.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Somos uno con la luz divina</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">One World One Family</span></div>
@@ -368,7 +207,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">7</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="16">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="16" data-file="https://vimana.rf.gd/unmundounafamilia/07.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Despertamos juntos al amanecer dorado</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
@@ -377,7 +216,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">8</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="17">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="17" data-file="https://vimana.rf.gd/unmundounafamilia/08.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">Unidos en amor</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Era Dorada Gracia Celestial</span></div>
@@ -386,7 +225,7 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">9</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="18">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="18" data-file="https://vimana.rf.gd/unmundounafamilia/09.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">En mi corazon tu gracia vivira</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">One World One Family</span></div>
@@ -395,34 +234,16 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">10</span>
           <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="19">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="19" data-file="https://vimana.rf.gd/unmundounafamilia/10.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
           <div class="min-w-0 flex-1"><p class="truncate font-medium">El Salvador luz de naciones</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
         </div>
 
-        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
-          <span class="w-5 text-sm text-muted-foreground">11</span>
-          <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
-          </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Respira Paz La Nueva Tierra</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
-        </div>
-
-        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
-          <span class="w-5 text-sm text-muted-foreground">12</span>
-          <img src="VimanaMusic2_files/divinaversum-cuadrada_mo_p.png" alt="Portada Divinaversum" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="21">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
-          </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Amanecer Un Mundo Una Familia</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Divinaversum</span></div>
-        </div>
-
       </div>
     </section>
 
-    <!-- ÁLBUM 3: SOHAM -->
+    <!-- ÁLBUM 3: SOHAM (Índices 20 - 27) -->
     <section class="mt-10">
       <h2 class="mb-4 text-xl font-semibold text-secondary">Pistas Álbum Soham</h2>
       <div class="divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
@@ -430,68 +251,310 @@
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">1</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="22">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="20" data-file="https://vimana.rf.gd/SOHAM2026/1.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">So Ham</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">SO HAM</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">2</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="23">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="21" data-file="https://vimana.rf.gd/SOHAM2026/2.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Soy la forma de la paz</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">SOY LA FORMA DE LA PAZ</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">3</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="24">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="22" data-file="https://vimana.rf.gd/SOHAM2026/3.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Sri Ram, Jey Jey Sai Ram Luz del Nuevo Sol</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">SRI RAM, JEY JEY SAI RAM LUZ DEL NUEVO SOL</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">4</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="25">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="23" data-file="https://vimana.rf.gd/SOHAM2026/4.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Brahma Murari Tripurantakari</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">BRAHMA MURARI TRIPURANTAKARI</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">5</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="26">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="24" data-file="https://vimana.rf.gd/SOHAM2026/5.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Somos Uno (Cantos Eternos de Paz y Amor)</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">SOMOS UNO (CANTOS ETERNOS DE PAZ Y AMOR).</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">6</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="27">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="25" data-file="https://vimana.rf.gd/SOHAM2026/6.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Om Sri Laksmy Kuvera Namaha</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">OM SRI LAKSMY KUVERA NAMAHA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
         <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
           <span class="w-5 text-sm text-muted-foreground">7</span>
           <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
-          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="28">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="26" data-file="https://vimana.rf.gd/SOHAM2026/7.mp3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
           </button>
-          <div class="min-w-0 flex-1"><p class="truncate font-medium">Guru Purnima</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">GURU PURNIMA 1</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">8</span>
+          <img src="VimanaMusic2_files/sohan_mo_p.jpg" alt="Portada Soham" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="27" data-file="https://vimana.rf.gd/SOHAM2026/8.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">GURU PURNIMA 2</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Soham America</span></div>
         </div>
 
       </div>
     </section>
+
+    <!-- ÁLBUM 4: SADHANA (Índices 28 - 37) -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-xl font-semibold text-secondary">Pistas para Sadhana Mantras para tu <strong>Práctica Espiritual Diaria</strong></h2>
+      <div class="divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
+        
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">1</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="28" data-file="https://vimana.rf.gd/mayo2026/1a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">11 oct (Día 1) | Puja Shailaputri - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">2</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="29" data-file="https://vimana.rf.gd/mayo2026/2a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">12 oct (Día 2) | Puja Brahmacharini - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">3</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="30" data-file="https://vimana.rf.gd/mayo2026/3a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">13 oct (Día 3) | Puja Chandraghanta - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">4</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="31" data-file="https://vimana.rf.gd/mayo2026/4a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">14 oct (Día 4) | Puja Kushmanda - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">5</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="32" data-file="https://vimana.rf.gd/mayo2026/5a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">15 oct (Día 5) | Puja Skandamata - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">6</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="33" data-file="https://vimana.rf.gd/mayo2026/6a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">16 oct (Día 6) | Puja Katyayani - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">7</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="34" data-file="https://vimana.rf.gd/mayo2026/7a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">17 oct (Día 7) | Puja Kalaratri - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">8</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="35" data-file="https://vimana.rf.gd/mayo2026/8a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">18 oct (Día 8) | Puja Mahagauri - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">9</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="36" data-file="https://vimana.rf.gd/mayo2026/9a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">19 oct (Día 9) | Puja Siddhidatri - MAHASHAKTI MANTRA</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">10</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Portada Sadhana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="37" data-file="https://vimana.rf.gd/mayo2026/10a.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">PISTA 10: LAXMI MANTRA | Mahalakshmi Mantra 108 Times</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Sadhana</span></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÁLBUM 5: PODCAST VIMANA (Índices 38 - 51) -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-xl font-semibold text-secondary">Episodios de Podcasts Vimana</h2>
+      <div class="divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
+        
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">1</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="38" data-file="https://vimana.rf.gd/PODCAST/VIMANA1.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Despertar de la Mente</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">2</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="39" data-file="https://vimana.rf.gd/PODCAST/VIMANA2.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Geometría del Corazón</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">3</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="40" data-file="https://vimana.rf.gd/PODCAST/VIMANA3.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Expansión Consciente</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">4</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="41" data-file="https://vimana.rf.gd/PODCAST/VIMANA4.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">El Eco del Silencio</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">5</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="42" data-file="https://vimana.rf.gd/PODCAST/VIMANA5.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Armonía Universal</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">6</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="43" data-file="https://vimana.rf.gd/PODCAST/VIMANA6.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">El Latido Cuántico</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">7</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="44" data-file="https://vimana.rf.gd/PODCAST/VIMANA7.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Senderos del Alma</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">8</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="45" data-file="https://vimana.rf.gd/PODCAST/VIMANA8.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Retorno al Origen</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">9</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="46" data-file="https://vimana.rf.gd/PODCAST/VIMANA9.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Ya eres lo que buscas</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">10</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="47" data-file="https://vimana.rf.gd/PODCAST/VIMANA10.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">El Arte de la Rendición Divina</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">11</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="48" data-file="https://vimana.rf.gd/PODCAST/VIMANA11.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">Vimana Transmisión Final</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">12</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="49" data-file="https://vimana.rf.gd/PODCAST/VIMANA12.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">SOL ES LA VIDA Y LA CONCIENCIA Y GAYATRI</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">13</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="50" data-file="https://vimana.rf.gd/PODCAST/VIMANA13.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">LO QUE TODOS DEBERÍAMOS SABER SOBRE NUESTRA PAZ</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+        <div class="track-row flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors">
+          <span class="w-5 text-sm text-muted-foreground">14</span>
+          <img src="VimanaMusic2_files/vimana-logo_mo_p.png" alt="Podcast Vimana" class="h-12 w-12 rounded object-cover">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground" data-track-index="51" data-file="https://vimana.rf.gd/PODCAST/VIMANA14.mp3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+          </button>
+          <div class="min-w-0 flex-1"><p class="truncate font-medium">¿Quién soy cuando desaparece el 'yo'?</p><span class="mt-1 inline-flex rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">PODCAST</span></div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <!-- REPRODUCTOR EMERGENTE FLOTANTE -->
@@ -534,21 +597,6 @@
         <input id="player-volume" type="range" min="0" max="1" step="0.05" value="1" class="w-20 h-1 bg-border rounded-lg appearance-none cursor-pointer accent-secondary">
       </div>
 
-    </div>
-  </div>
-
-  <!-- REPRODUCTOR MODAL PARA YOUTUBE -->
-  <div id="yt-modal" class="fixed inset-0 z-50 bg-black/80 items-center justify-center p-4 hidden">
-    <div class="relative w-full max-w-4xl bg-card rounded-lg overflow-hidden border border-border shadow-2xl">
-      <div class="flex justify-between items-center p-3 border-b border-border">
-        <span class="text-sm font-semibold">Reproductor de Video Vimana</span>
-        <button id="yt-modal-close" class="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="aspect-video w-full">
-        <iframe id="yt-iframe" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-      </div>
     </div>
   </div>
 
