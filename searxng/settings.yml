@@ -1,0 +1,14 @@
+use_default_settings: true
+
+server:
+  secret_key: "cambia-esta-clave-larga-y-aleatoria"
+  limiter: false          # en VPS propio; si abres al mundo, mejor true + redis
+  image_proxy: false
+
+search:
+  formats:
+    - html
+    - json                 # imprescindible para engine.js
+
+redis:
+  url: redis://redis:6379/0
