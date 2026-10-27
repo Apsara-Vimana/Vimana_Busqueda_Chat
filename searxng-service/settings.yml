@@ -1,0 +1,48 @@
+# SearXNG — JSON habilitado para Apsara Vimana
+use_default_settings: true
+
+general:
+  instance_name: "Apsara SearXNG"
+  debug: false
+
+server:
+  # Render inyecta PORT; la imagen oficial escucha 8080 internamente
+  secret_key: "apsara-vimana-searxng-cambia-en-produccion-2026"
+  limiter: false
+  image_proxy: false
+  method: "GET"
+  # base_url se puede ajustar tras el deploy a la URL real de Render
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "es-ES"
+  formats:
+    - html
+    - json
+
+ui:
+  static_use_hash: true
+
+# Sin Redis: más simple en free tier. limiter ya está en false.
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: false
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    disabled: false
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: wp
+    disabled: false
+  - name: yahoo
+    engine: yahoo
+    shortcut: yh
+    disabled: false
