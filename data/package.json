@@ -1,0 +1,20 @@
+{
+  "name": "vimana-busqueda-chat",
+  "version": "7.0.0",
+  "description": "Apsara Vimana \u2014 chat + metabuscador Node + Neon",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.0"
+  }
+}

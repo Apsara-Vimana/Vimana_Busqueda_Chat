@@ -1,61 +1,51 @@
-/**
- * Apsara Vimana — servidor Node (Render)
- * Sirve la UI y /api/chat → motor local + búsqueda gratis + Neon opcional
- */
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
 const path = require('path');
+const express = require('express');
 const { procesar } = require('./lib/engine');
-const { initSchema, guardarMensaje } = require('./lib/neon');
+const { guardarMensaje } = require('./lib/neon');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Estáticos (UI + imágenes)
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/ping', (_req, res) => {
-  res.json({ ok: true, t: Date.now(), servicio: 'Apsara Vimana Node' });
+  res.json({
+    ok: true,
+    t: Date.now(),
+    neon: Boolean(process.env.DATABASE_URL),
+    searx: process.env.SEARXNG_URL || null,
+  });
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const q = String(req.body.q || req.body.pregunta || req.body.message || '').trim();
-    if (q) await guardarMensaje('user', q);
-    const out = await procesar(q);
-    if (out && out.reply) await guardarMensaje('assistant', out.reply, { fuente: out.agente });
-    res.json(out);
+    const q = (req.body && (req.body.q || req.body.message || req.body.text)) || '';
+    const data = await procesar(String(q));
+
+    // Guardar en Neon si hay DATABASE_URL (no bloquea la respuesta si falla)
+    Promise.resolve()
+      .then(async () => {
+        if (!process.env.DATABASE_URL) return;
+        await guardarMensaje('user', q);
+        if (data && data.reply) await guardarMensaje('assistant', data.reply);
+      })
+      .catch(() => {});
+
+    res.json(data);
   } catch (e) {
-    console.error('[chat]', e);
-    res.json({
-      ok: true,
-      agente: 'Apsara Vimana',
-      reply: 'Hubo un problema interno. Inténtalo de nuevo en unos segundos.',
-      image: 'imagenes/estados/apsara_hero.jpg',
+    console.error(e);
+    res.status(500).json({
+      reply: 'Error interno. Intenta de nuevo.',
+      image: 'index_files/2_fBUK.jpg',
       links: [],
       options: [],
     });
   }
 });
 
-// Compatibilidad con el front antiguo (FormData a engine.php)
-app.post('/api/engine.php', async (req, res) => {
-  req.url = '/api/chat';
-  return app._router.handle(req, res, () => {});
-});
-
-// SPA fallback
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-initSchema().then((ok) => {
-  if (ok) console.log('[neon] listo');
-  else console.log('[neon] sin DATABASE_URL — chat sin historial en DB');
-  app.listen(PORT, () => console.log(`Apsara Vimana en :${PORT}`));
+app.listen(PORT, () => {
+  console.log('Apsara Vimana on', PORT);
+  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'set' : 'missing');
+  console.log('SEARXNG_URL:', process.env.SEARXNG_URL || '(default list)');
 });
