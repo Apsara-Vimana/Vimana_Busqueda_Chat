@@ -6,12 +6,10 @@ general:
   debug: false
 
 server:
-  # Render inyecta PORT; la imagen oficial escucha 8080 internamente
   secret_key: "apsara-vimana-searxng-cambia-en-produccion-2026"
   limiter: false
   image_proxy: false
   method: "GET"
-  # base_url se puede ajustar tras el deploy a la URL real de Render
 
 search:
   safe_search: 0
@@ -24,7 +22,6 @@ search:
 ui:
   static_use_hash: true
 
-# Sin Redis: más simple en free tier. limiter ya está en false.
 engines:
   - name: google
     engine: google

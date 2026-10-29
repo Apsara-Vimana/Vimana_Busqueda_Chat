@@ -317,8 +317,22 @@
       e.preventDefault();
       enviar();
     });
+    
+    /* Despertar SearXNG al abrir el chat (Render free) — el usuario no nota nada */
+    function despertarSearx() {
+      try {
+        fetch('/api/wake-searx', { method: 'GET', cache: 'no-store' }).catch(function () {});
+      } catch (e) {}
+    }
+    despertarSearx();
+    /* Repetir cada 12 min si la pestaña sigue abierta */
+    setInterval(despertarSearx, 12 * 60 * 1000);
+
     setInterval(function () {
-      if (document.visibilityState === 'visible') fetch('/api/ping').catch(function () {});
+      if (document.visibilityState === 'visible') {
+        fetch('/api/ping').catch(function () {});
+        despertarSearx();
+      }
     }, 600000);
   })();
   </script>
