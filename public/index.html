@@ -149,6 +149,21 @@
     }
     #send:disabled { opacity: 0.4; cursor: default; }
     #send svg { width: 1.15rem; height: 1.15rem; stroke: #fff; }
+
+    .char-ghost {
+      position: absolute;
+      left: 1.05rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 0.78rem;
+      color: rgba(122, 134, 144, 0.55);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      transition: opacity 0.25s ease;
+    }
+    .char-ghost.hidden { opacity: 0; }
+    #composer { position: relative; }
   </style>
 </head>
 <body>
@@ -170,6 +185,7 @@
     <div class="composer-wrap">
       <p id="typing"></p>
       <form id="composer" autocomplete="off">
+        <span class="char-ghost" id="charGhost" aria-hidden="true"></span>
         <textarea id="message" rows="1" maxlength="600" placeholder="Escribe tu mensaje..." enterkeyhint="send"></textarea>
         <button type="submit" id="send" aria-label="Enviar" disabled>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -190,6 +206,22 @@
     var typing = document.getElementById('typing');
     var busy = false;
 
+    var MAX_CHARS = 600;
+    var charGhost = document.getElementById('charGhost');
+    function updateCharGhost() {
+      if (!charGhost) return;
+      var len = message.value.length;
+      if (len > 0) {
+        charGhost.classList.add('hidden');
+        charGhost.textContent = '';
+      } else {
+        charGhost.classList.remove('hidden');
+        charGhost.textContent = MAX_CHARS + ' caracteres';
+      }
+    }
+    updateCharGhost();
+
+
     function el(tag, cls, text) {
       var e = document.createElement(tag);
       if (cls) e.className = cls;
@@ -198,6 +230,18 @@
     }
     function scrollBottom() {
       conversation.scrollTop = conversation.scrollHeight;
+    }
+    /** Deja el inicio de la respuesta a la vista (mitad superior del área de chat) */
+    function scrollToMsgStart(el) {
+      if (!el) { scrollBottom(); return; }
+      try {
+        var cRect = conversation.getBoundingClientRect();
+        var eRect = el.getBoundingClientRect();
+        var delta = eRect.top - cRect.top - cRect.height * 0.18;
+        conversation.scrollTop = conversation.scrollTop + delta;
+      } catch (err) {
+        scrollBottom();
+      }
     }
     function activarPantallaGris() {
       document.body.classList.add('writing');
@@ -265,7 +309,7 @@
       }
       row.appendChild(col);
       conversation.appendChild(row);
-      scrollBottom();
+      scrollToMsgStart(row);
     }
 
     function setBusy(on) {
@@ -299,6 +343,7 @@
     }
 
     message.addEventListener('input', function () {
+      updateCharGhost();
       if (message.value.length > 0) activarPantallaGris();
       message.style.height = 'auto';
       message.style.height = Math.min(message.scrollHeight, 128) + 'px';
