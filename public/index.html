@@ -150,6 +150,48 @@
     #send:disabled { opacity: 0.4; cursor: default; }
     #send svg { width: 1.15rem; height: 1.15rem; stroke: #fff; }
 
+    .media-list { margin-top: 0.45rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .media-btn {
+      display: flex; align-items: center; gap: 0.45rem;
+      border: 1px solid #9cc8e6; background: #fff; color: #1a3a5c;
+      border-radius: 0.65rem; padding: 0.45rem 0.7rem;
+      font-size: 0.82rem; cursor: pointer; font-family: inherit; text-align: left;
+    }
+    .media-btn:hover { background: #e8f4fc; }
+    .media-btn .ico { flex-shrink: 0; font-size: 0.9rem; }
+    #player-dock {
+      display: none;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+      background: rgba(15, 22, 32, 0.94);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(156, 200, 230, 0.35);
+      padding: 0.55rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 28px rgba(0,0,0,0.35);
+    }
+    #player-dock.open { display: block; }
+    #player-dock .inner {
+      max-width: 42rem; margin: 0 auto;
+      display: flex; align-items: center; gap: 0.55rem;
+    }
+    #player-dock .meta { flex: 1; min-width: 0; }
+    #player-dock .title {
+      font-size: 0.82rem; color: #f8f6f0; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    #player-dock .sub { font-size: 0.68rem; color: rgba(248,246,240,0.55); }
+    #player-dock button {
+      border: 0; border-radius: 50%; width: 2.2rem; height: 2.2rem;
+      cursor: pointer; flex-shrink: 0;
+      display: grid; place-items: center;
+      background: #16a34a; color: #fff; font-size: 0.85rem;
+    }
+    #player-dock button.ghost {
+      background: transparent; border: 1px solid rgba(248,246,240,0.25);
+      color: #f8f6f0; font-size: 1rem;
+    }
+    body.player-open .composer-wrap { padding-bottom: calc(4.2rem + env(safe-area-inset-bottom)); }
+
+
     .char-ghost {
       position: absolute;
       left: 1.05rem;
@@ -205,6 +247,58 @@
     var sendBtn = document.getElementById('send');
     var typing = document.getElementById('typing');
     var busy = false;
+
+    var playerDock = document.getElementById('player-dock');
+    var playerAudio = document.getElementById('playerAudio');
+    var playerTitle = document.getElementById('playerTitle');
+    var playerPlay = document.getElementById('playerPlay');
+    var playerClose = document.getElementById('playerClose');
+
+    function openPlayer(url, title) {
+      if (!playerAudio || !url) return;
+      playerTitle.textContent = title || 'Reproduciendo';
+      playerDock.classList.add('open');
+      document.body.classList.add('player-open');
+      if (playerAudio.src !== url) {
+        playerAudio.src = url;
+      }
+      playerAudio.play().then(function () {
+        playerPlay.textContent = '⏸';
+      }).catch(function () {
+        playerPlay.textContent = '▶';
+      });
+    }
+    function closePlayer() {
+      if (playerAudio) {
+        playerAudio.pause();
+        playerAudio.removeAttribute('src');
+        playerAudio.load();
+      }
+      if (playerDock) playerDock.classList.remove('open');
+      document.body.classList.remove('player-open');
+      if (playerPlay) playerPlay.textContent = '▶';
+    }
+    if (playerPlay) {
+      playerPlay.addEventListener('click', function () {
+        if (!playerAudio) return;
+        if (playerAudio.paused) {
+          playerAudio.play().then(function () { playerPlay.textContent = '⏸'; }).catch(function () {});
+        } else {
+          playerAudio.pause();
+          playerPlay.textContent = '▶';
+        }
+      });
+    }
+    if (playerClose) playerClose.addEventListener('click', closePlayer);
+    if (playerAudio) {
+      playerAudio.addEventListener('ended', function () { playerPlay.textContent = '▶'; });
+    }
+
+    function isAudioLink(u) {
+      u = String(u || '').toLowerCase();
+      return /\.mp3(\?|$)/.test(u) || /\/stream/.test(u) || /radio|icecast|somafm|streemlion|yesstreaming|shoutcast|torontocast/.test(u);
+    }
+
 
     var MAX_CHARS = 600;
     var charGhost = document.getElementById('charGhost');
@@ -281,14 +375,40 @@
       var col = document.createElement('div');
       col.style.maxWidth = '88%';
       col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
+      if (data && data.media && data.media.length) {
+        var mlist = el('div', 'media-list');
+        data.media.forEach(function (M) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'media-btn';
+          var ico = el('span', 'ico', M.kind === 'radio' ? '📻' : '▶');
+          b.appendChild(ico);
+          b.appendChild(document.createTextNode(M.t || 'Pista'));
+          b.addEventListener('click', function () {
+            openPlayer(M.u, M.t);
+          });
+          mlist.appendChild(b);
+        });
+        col.appendChild(mlist);
+      }
       if (data && data.links && data.links.length) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
-          var a = el('a', 'link-card');
-          a.href = L.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-          a.appendChild(el('span', 'link-title', L.t || L.u));
-          a.appendChild(el('span', 'link-url', String(L.u || '').replace(/^https?:\/\//, '')));
-          list.appendChild(a);
+          if (isAudioLink(L.u)) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'media-btn';
+            b.appendChild(el('span', 'ico', '▶'));
+            b.appendChild(document.createTextNode(L.t || 'Audio'));
+            b.addEventListener('click', function () { openPlayer(L.u, L.t); });
+            list.appendChild(b);
+          } else {
+            var a = el('a', 'link-card');
+            a.href = L.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            a.appendChild(el('span', 'link-title', L.t || L.u));
+            /* sin mostrar la ruta del servidor */
+            list.appendChild(a);
+          }
         });
         col.appendChild(list);
       }
@@ -381,5 +501,18 @@
     }, 600000);
   })();
   </script>
+
+  <div id="player-dock" aria-label="Reproductor Vimana">
+    <div class="inner">
+      <button type="button" id="playerPlay" title="Play/Pausa">▶</button>
+      <div class="meta">
+        <div class="title" id="playerTitle">—</div>
+        <div class="sub" id="playerSub">Vimana · en el chat</div>
+      </div>
+      <button type="button" class="ghost" id="playerClose" title="Cerrar">×</button>
+    </div>
+    <audio id="playerAudio" preload="none"></audio>
+  </div>
+
 </body>
 </html>
