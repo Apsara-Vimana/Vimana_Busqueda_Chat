@@ -18,27 +18,22 @@ function searxBase() {
 function isAllowedAudioHost(hostname) {
   const h = String(hostname || '').toLowerCase();
   const allow = [
-    'vimana.rf.gd',
-    'www.vimana.rf.gd',
-    'mydoom666.radio.fm',
-    'icecast.omroep.nl',
-    'ec6.yesstreaming.net',
-    'radio.streemlion.com',
-    'puma.streemlion.com',
-    'kathy.torontocast.com',
-    'relaxingmusicradio247.com',
-    'stream.srg-ssr.ch',
-    'us2.internet-radio.com',
-    'listen.011fm.com',
-    'ice1.somafm.com',
-    'ice2.somafm.com',
-    'ice3.somafm.com',
-    'ice4.somafm.com',
+    'vimana.rf.gd', 'www.vimana.rf.gd',
+    'mydoom666.radio.fm', 'icecast.omroep.nl',
+    'ec6.yesstreaming.net', 'radio.streemlion.com', 'puma.streemlion.com',
+    'kathy.torontocast.com', 'relaxingmusicradio247.com', 'stream.srg-ssr.ch',
+    'us2.internet-radio.com', 'listen.011fm.com',
+    'ice1.somafm.com', 'ice2.somafm.com', 'ice3.somafm.com', 'ice4.somafm.com',
     'pstnet4.shoutcastnet.com',
+    'stream.sssmediacentre.org', 'stream.radiosai.net', 'radiosai.net',
+    'radiosahaja.com', 'stream.laut.fm', 'stream.newageradio.gr',
+    'streaming.mundoclasicaupa.com', 'dard.out.airtime.pro',
   ];
   if (allow.includes(h)) return true;
-  // IP legacy de una radio de la lista
   if (/^\d+\.\d+\.\d+\.\d+$/.test(h)) return true;
+  if (h.endsWith('.airtime.pro')) return true;
+  if (h.endsWith('.yesstreaming.net')) return true;
+  if (h.endsWith('.radio.fm')) return true;
   return false;
 }
 
@@ -102,10 +97,11 @@ app.get('/api/audio', async (req, res) => {
 
     const headers = {
       'User-Agent':
-        'Mozilla/5.0 (compatible; ApsaraVimana/8.6; +https://github.com/Apsara-Vimana)',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       Accept: '*/*',
+      Referer: target.origin + '/',
+      Origin: target.origin,
     };
-    // reenviar Range si el cliente lo pide (seek en mp3)
     if (req.headers.range) headers.Range = req.headers.range;
 
     const upstream = await fetch(target.toString(), {
