@@ -377,14 +377,19 @@
     /** Deja el inicio de la respuesta a la vista (mitad superior del área de chat) */
     function scrollToMsgStart(el) {
       if (!el) { scrollBottom(); return; }
-      try {
-        var cRect = conversation.getBoundingClientRect();
-        var eRect = el.getBoundingClientRect();
-        var delta = eRect.top - cRect.top - cRect.height * 0.18;
-        conversation.scrollTop = conversation.scrollTop + delta;
-      } catch (err) {
-        scrollBottom();
+      function go() {
+        try {
+          var cRect = conversation.getBoundingClientRect();
+          var eRect = el.getBoundingClientRect();
+          /* inicio del mensaje ~ mitad superior del área de chat */
+          var delta = eRect.top - cRect.top - cRect.height * 0.22;
+          conversation.scrollTop = conversation.scrollTop + delta;
+        } catch (err) {
+          scrollBottom();
+        }
       }
+      go();
+      requestAnimationFrame(function () { requestAnimationFrame(go); });
     }
     function activarPantallaGris() {
       document.body.classList.add('writing');
