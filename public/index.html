@@ -269,6 +269,11 @@
     var playerPlay = document.getElementById('playerPlay');
     var playerClose = document.getElementById('playerClose');
 
+    function toProxyAudio(url) {
+      if (!url) return url;
+      if (String(url).indexOf('/api/audio') === 0) return url;
+      return '/api/audio?u=' + encodeURIComponent(url);
+    }
     function getPlayerEls() {
       return {
         dock: document.getElementById('player-dock'),
@@ -289,7 +294,7 @@
       document.body.classList.add('player-open');
       try {
         P.audio.pause();
-        P.audio.src = url;
+        P.audio.src = toProxyAudio(url);
         P.audio.load();
         var playPromise = P.audio.play();
         if (playPromise && playPromise.then) {
