@@ -5,7 +5,7 @@
       "url": "https://mydoom666.radio.fm/md666-128k"
     },
     {
-      "name": "NPO KLASSIEK — CLÁSICO",
+      "name": "NPO KLASSIEK — CLASICO",
       "url": "https://icecast.omroep.nl/radio4-bb-mp3"
     },
     {
@@ -37,24 +37,72 @@
       "url": "https://stream.srg-ssr.ch/m/rsj/mp3_128"
     },
     {
-      "name": "MATT JOHNSON — INSTRUMENTAL",
+      "name": "MATT JOHNSON RADIO — INSTRUMENTAL",
       "url": "http://us2.internet-radio.com:8046/stream/1/"
     },
     {
-      "name": "HOLIDAY — INSTRUMENTAL",
+      "name": "HOLIDAY - INSTRUMENTAL",
       "url": "http://listen.011fm.com:80/stream33"
     },
     {
-      "name": "SOMA FM — ELECTRONIC",
+      "name": "SOMA FM - ELECTRONIC",
       "url": "http://ice1.somafm.com/fluid-128-mp3/"
     },
     {
-      "name": "GOLD — INSTRUMENTAL",
+      "name": "GOLD-INSTRUMENTAL",
       "url": "http://199.233.234.34:25373/stream/1/"
     },
     {
       "name": "MOGUL JAZZ RADIO",
       "url": "http://pstnet4.shoutcastnet.com:40520/stream"
+    },
+    {
+      "name": "RADIO SAI GLOBAL HARMONY — BHAJAN",
+      "url": "https://stream.sssmediacentre.org:8000/autobhajan",
+      "fallbacks": [
+        "http://stream.radiosai.net:8000/",
+        "http://stream.radiosai.net:8002/",
+        "http://stream.radiosai.net:8006/"
+      ]
+    },
+    {
+      "name": "SAHAJA YOGA — RADIO",
+      "url": "https://radiosahaja.com:8443/SYradio.mp3"
+    },
+    {
+      "name": "SAHAJA YOGA — INSTRUMENTAL",
+      "url": "https://radiosahaja.com:8443/Inst1.mp3"
+    },
+    {
+      "name": "SAHAJA YOGA — RADIO 3",
+      "url": "https://radiosahaja.com:8443/SY3radio.mp3"
+    },
+    {
+      "name": "SAHAJA YOGA — RADIO 2",
+      "url": "https://radiosahaja.com:8443/SY2radio.mp3"
+    },
+    {
+      "name": "AMBIENT RADIO (HAMBURG)",
+      "url": "https://stream.laut.fm/ambient"
+    },
+    {
+      "name": "NEW AGE RADIO EUROPE — HQ",
+      "url": "https://stream.newageradio.gr/listen/hq/radio.mp3",
+      "fallbacks": [
+        "https://stream.newageradio.gr/listen/hq/radio.flac"
+      ]
+    },
+    {
+      "name": "RADIO EL MUNDO — 93.7 FM (La Voz del Avatar · domingos 7:30 am)",
+      "url": "https://streaming.mundoclasicaupa.com/radioelmundo"
+    },
+    {
+      "name": "BHAKTIWORLD MEDIA — SHRI RAM",
+      "url": "https://dard.out.airtime.pro/dard_a",
+      "fallbacks": [
+        "http://dard.out.airtime.pro:8000/dard_a",
+        "https://dard.out.airtime.pro/dard_a?type=mp3"
+      ]
     }
   ],
   "tracks": [
