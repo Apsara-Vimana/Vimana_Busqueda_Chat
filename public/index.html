@@ -427,28 +427,41 @@
       if (data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
         data.media.forEach(function (M) {
+          var u = String(M.u || '');
+          // Solo radios en el player del chat; NUNCA botones a MP3 de pistas
+          var isMp3 = /\.mp3(\?|$)/i.test(u) || M.kind === 'track';
+          if (isMp3) return;
+          if (M.kind && M.kind !== 'radio' && !isMp3) {
+            /* permitir streams de radio sin kind */
+          }
           var b = document.createElement('button');
           b.type = 'button';
           b.className = 'media-btn';
-          var ico = el('span', 'ico', M.kind === 'radio' ? '📻' : '▶');
-          b.appendChild(ico);
-          b.appendChild(document.createTextNode(M.t || 'Pista'));
+          b.appendChild(el('span', 'ico', '📻'));
+          b.appendChild(document.createTextNode(M.t || 'Radio'));
           b.addEventListener('click', function () {
             openPlayer(M.u, M.t);
           });
           mlist.appendChild(b);
         });
-        col.appendChild(mlist);
+        if (mlist.childNodes.length) col.appendChild(mlist);
       }
       if (data && data.links && data.links.length) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
-          if (isAudioLink(L.u)) {
+          if (isAudioLink(L.u) && /\.mp3(\?|$)/i.test(String(L.u))) {
+            /* MP3 Vimana: no botón player; el enlace de catálogo va en links normales */
+            var a2 = el('a', 'link-card');
+            a2.href = 'https://vimana.rf.gd/VimanaMusic2.html';
+            a2.target = '_blank'; a2.rel = 'noopener noreferrer';
+            a2.appendChild(el('span', 'link-title', L.t || 'Vimana Music'));
+            list.appendChild(a2);
+          } else if (isAudioLink(L.u)) {
             var b = document.createElement('button');
             b.type = 'button';
             b.className = 'media-btn';
-            b.appendChild(el('span', 'ico', '▶'));
-            b.appendChild(document.createTextNode(L.t || 'Audio'));
+            b.appendChild(el('span', 'ico', '📻'));
+            b.appendChild(document.createTextNode(L.t || 'Radio'));
             b.addEventListener('click', function () { openPlayer(L.u, L.t); });
             list.appendChild(b);
           } else {
