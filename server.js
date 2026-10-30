@@ -1,4 +1,5 @@
 const path = require('path');
+const { Readable } = require('stream');
 const express = require('express');
 const { procesar } = require('./lib/engine');
 const { guardarMensaje } = require('./lib/neon');
@@ -13,14 +14,40 @@ function searxBase() {
   return (process.env.SEARXNG_URL || '').trim().replace(/\/$/, '');
 }
 
-/** Despierta SearXNG en segundo plano (Render free). No bloquea al usuario. */
+/** Dominios permitidos para proxy de audio (anti-abuso) */
+function isAllowedAudioHost(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  const allow = [
+    'vimana.rf.gd',
+    'www.vimana.rf.gd',
+    'mydoom666.radio.fm',
+    'icecast.omroep.nl',
+    'ec6.yesstreaming.net',
+    'radio.streemlion.com',
+    'puma.streemlion.com',
+    'kathy.torontocast.com',
+    'relaxingmusicradio247.com',
+    'stream.srg-ssr.ch',
+    'us2.internet-radio.com',
+    'listen.011fm.com',
+    'ice1.somafm.com',
+    'ice2.somafm.com',
+    'ice3.somafm.com',
+    'ice4.somafm.com',
+    'pstnet4.shoutcastnet.com',
+  ];
+  if (allow.includes(h)) return true;
+  // IP legacy de una radio de la lista
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(h)) return true;
+  return false;
+}
+
 async function wakeSearx() {
   const base = searxBase();
   if (!base) return { ok: false, reason: 'no SEARXNG_URL' };
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 50000);
   try {
-    // GET a la home basta para sacar el servicio del sueño
     const r = await fetch(base + '/', {
       signal: ctrl.signal,
       redirect: 'follow',
@@ -35,7 +62,6 @@ async function wakeSearx() {
 }
 
 app.get('/api/ping', async (_req, res) => {
-  // Mantener chat despierto y empujar SearXNG
   wakeSearx().catch(() => {});
   res.json({
     ok: true,
@@ -47,13 +73,79 @@ app.get('/api/ping', async (_req, res) => {
 });
 
 app.get('/api/wake-searx', async (_req, res) => {
-  const result = await wakeSearx();
-  res.json(result);
+  res.json(await wakeSearx());
+});
+
+/**
+ * Proxy de audio: el navegador pide al MISMO origen (Render)
+ * y el servidor descarga desde vimana.rf.gd / radios.
+ * Así se evita bloqueo hotlink / CORS del hosting gratuito.
+ */
+app.get('/api/audio', async (req, res) => {
+  try {
+    const raw = String(req.query.u || '').trim();
+    if (!raw || raw.length > 800) {
+      return res.status(400).send('bad url');
+    }
+    let target;
+    try {
+      target = new URL(raw);
+    } catch {
+      return res.status(400).send('invalid url');
+    }
+    if (!/^https?:$/.test(target.protocol)) {
+      return res.status(400).send('protocol');
+    }
+    if (!isAllowedAudioHost(target.hostname)) {
+      return res.status(403).send('host not allowed');
+    }
+
+    const headers = {
+      'User-Agent':
+        'Mozilla/5.0 (compatible; ApsaraVimana/8.6; +https://github.com/Apsara-Vimana)',
+      Accept: '*/*',
+    };
+    // reenviar Range si el cliente lo pide (seek en mp3)
+    if (req.headers.range) headers.Range = req.headers.range;
+
+    const upstream = await fetch(target.toString(), {
+      headers,
+      redirect: 'follow',
+    });
+
+    if (!upstream.ok && upstream.status !== 206) {
+      return res.status(upstream.status).send('upstream error');
+    }
+
+    const ct = upstream.headers.get('content-type') || 'audio/mpeg';
+    res.setHeader('Content-Type', ct);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.setHeader('Accept-Ranges', 'bytes');
+    const cl = upstream.headers.get('content-length');
+    if (cl) res.setHeader('Content-Length', cl);
+    const cr = upstream.headers.get('content-range');
+    if (cr) res.setHeader('Content-Range', cr);
+    res.status(upstream.status);
+
+    if (!upstream.body) {
+      return res.end();
+    }
+    // Stream Node 18+
+    const nodeStream = Readable.fromWeb(upstream.body);
+    nodeStream.on('error', () => {
+      try {
+        res.end();
+      } catch (_) {}
+    });
+    nodeStream.pipe(res);
+  } catch (e) {
+    console.error('audio proxy', e.message);
+    if (!res.headersSent) res.status(502).send('proxy fail');
+  }
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
-    // Al primer mensaje también intentamos despertar (por si entró directo al chat)
     wakeSearx().catch(() => {});
 
     const q = (req.body && (req.body.q || req.body.message || req.body.text)) || '';
@@ -82,6 +174,5 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log('Apsara Vimana on', PORT);
   console.log('SEARXNG_URL:', searxBase() || '(missing)');
-  // Despertar al arrancar el chat
   wakeSearx().then((r) => console.log('wake-searx on boot:', r)).catch(() => {});
 });
