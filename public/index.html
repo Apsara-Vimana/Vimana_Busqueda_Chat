@@ -160,15 +160,16 @@
     .media-btn:hover { background: #e8f4fc; }
     .media-btn .ico { flex-shrink: 0; font-size: 0.9rem; }
     #player-dock {
-      display: none;
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-      background: rgba(15, 22, 32, 0.94);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(156, 200, 230, 0.35);
-      padding: 0.55rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom));
-      box-shadow: 0 -8px 28px rgba(0,0,0,0.35);
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
+      background: rgba(15, 22, 32, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(156, 200, 230, 0.4);
+      padding: 0.65rem 0.9rem calc(0.65rem + env(safe-area-inset-bottom));
+      box-shadow: 0 -10px 32px rgba(0,0,0,0.45);
     }
-    #player-dock.open { display: block; }
+    #player-dock[hidden] { display: none !important; }
+    #player-dock:not([hidden]) { display: block !important; }
     #player-dock .inner {
       max-width: 42rem; margin: 0 auto;
       display: flex; align-items: center; gap: 0.55rem;
@@ -238,6 +239,20 @@
     </div>
   </div>
 
+
+  <!-- Reproductor HTML5 in-page (no Able Player; no ventana nueva) -->
+  <div id="player-dock" class="" hidden>
+    <div class="inner">
+      <button type="button" id="playerPlay" aria-label="Play">▶</button>
+      <div class="meta">
+        <div class="title" id="playerTitle">Vimana</div>
+        <div class="sub" id="playerSub">Reproduce en el chat · sin salir</div>
+      </div>
+      <button type="button" class="ghost" id="playerClose" aria-label="Cerrar">×</button>
+    </div>
+    <audio id="playerAudio" playsinline preload="metadata" ></audio>
+  </div>
+
   <script>
   (function () {
     var API = '/api/chat';
@@ -254,45 +269,74 @@
     var playerPlay = document.getElementById('playerPlay');
     var playerClose = document.getElementById('playerClose');
 
+    function getPlayerEls() {
+      return {
+        dock: document.getElementById('player-dock'),
+        audio: document.getElementById('playerAudio'),
+        title: document.getElementById('playerTitle'),
+        play: document.getElementById('playerPlay'),
+        close: document.getElementById('playerClose')
+      };
+    }
     function openPlayer(url, title) {
-      if (!playerAudio || !url) return;
-      playerTitle.textContent = title || 'Reproduciendo';
-      playerDock.classList.add('open');
-      document.body.classList.add('player-open');
-      if (playerAudio.src !== url) {
-        playerAudio.src = url;
+      var P = getPlayerEls();
+      if (!P.audio || !P.dock || !url) {
+        console.warn('player missing', !!P.audio, !!P.dock, url);
+        return;
       }
-      playerAudio.play().then(function () {
-        playerPlay.textContent = '⏸';
-      }).catch(function () {
-        playerPlay.textContent = '▶';
-      });
+      if (P.title) P.title.textContent = title || 'Vimana';
+      P.dock.hidden = false;
+      document.body.classList.add('player-open');
+      try {
+        P.audio.pause();
+        P.audio.src = url;
+        P.audio.load();
+        var playPromise = P.audio.play();
+        if (playPromise && playPromise.then) {
+          playPromise.then(function () {
+            if (P.play) P.play.textContent = '⏸';
+          }).catch(function (err) {
+            if (P.play) P.play.textContent = '▶';
+            if (P.title) P.title.textContent = (title || 'Audio') + ' · pulsa ▶';
+          });
+        }
+      } catch (e) {
+        if (P.play) P.play.textContent = '▶';
+      }
     }
     function closePlayer() {
-      if (playerAudio) {
-        playerAudio.pause();
-        playerAudio.removeAttribute('src');
-        playerAudio.load();
+      var P = getPlayerEls();
+      if (P.audio) {
+        P.audio.pause();
+        P.audio.removeAttribute('src');
+        try { P.audio.load(); } catch (e) {}
       }
-      if (playerDock) playerDock.classList.remove('open');
+      if (P.dock) P.dock.hidden = true;
       document.body.classList.remove('player-open');
-      if (playerPlay) playerPlay.textContent = '▶';
+      if (P.play) P.play.textContent = '▶';
     }
-    if (playerPlay) {
-      playerPlay.addEventListener('click', function () {
-        if (!playerAudio) return;
-        if (playerAudio.paused) {
-          playerAudio.play().then(function () { playerPlay.textContent = '⏸'; }).catch(function () {});
-        } else {
-          playerAudio.pause();
-          playerPlay.textContent = '▶';
-        }
-      });
-    }
-    if (playerClose) playerClose.addEventListener('click', closePlayer);
-    if (playerAudio) {
-      playerAudio.addEventListener('ended', function () { playerPlay.textContent = '▶'; });
-    }
+    (function bindPlayerControls() {
+      var P = getPlayerEls();
+      if (P.play) {
+        P.play.addEventListener('click', function () {
+          var A = getPlayerEls();
+          if (!A.audio) return;
+          if (A.audio.paused) {
+            A.audio.play().then(function () { A.play.textContent = '⏸'; }).catch(function () {});
+          } else {
+            A.audio.pause();
+            A.play.textContent = '▶';
+          }
+        });
+      }
+      if (P.close) P.close.addEventListener('click', closePlayer);
+      if (P.audio) {
+        P.audio.addEventListener('ended', function () {
+          var A = getPlayerEls();
+          if (A.play) A.play.textContent = '▶';
+        });
+      }
+    })();
 
     function isAudioLink(u) {
       u = String(u || '').toLowerCase();
@@ -501,18 +545,5 @@
     }, 600000);
   })();
   </script>
-
-  <div id="player-dock" aria-label="Reproductor Vimana">
-    <div class="inner">
-      <button type="button" id="playerPlay" title="Play/Pausa">▶</button>
-      <div class="meta">
-        <div class="title" id="playerTitle">—</div>
-        <div class="sub" id="playerSub">Vimana · en el chat</div>
-      </div>
-      <button type="button" class="ghost" id="playerClose" title="Cerrar">×</button>
-    </div>
-    <audio id="playerAudio" preload="none"></audio>
-  </div>
-
 </body>
 </html>
