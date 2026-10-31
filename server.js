@@ -159,7 +159,7 @@ app.post('/api/chat', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({
-      reply: 'Error interno. Intenta de nuevo.',
+      reply: 'No pude completar eso ahora. Prueba de nuevo en un momento, por favor.',
       image: 'index_files/2_fBUK.jpg',
       links: [],
       options: [],

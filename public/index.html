@@ -559,7 +559,7 @@
         var data = await r.json();
         botBubble(data);
       } catch (e) {
-        botBubble({ reply: 'No pude completar la respuesta. Inténtalo de nuevo.', links: [] });
+        botBubble({ reply: 'No pude completar eso ahora. Prueba de nuevo en un momento.', links: [] });
       } finally {
         setBusy(false);
         message.focus();
