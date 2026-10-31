@@ -4,3 +4,4 @@ node_modules/
 *.log
 cache/*
 !cache/.gitkeep
+*.zip
