@@ -207,6 +207,30 @@
     }
     .char-ghost.hidden { opacity: 0; }
     #composer { position: relative; }
+  
+    .msg-image-wrap { margin: 0 0 0.5rem; text-align: center; }
+    .msg-image-wrap img {
+      display: block; margin: 0 auto; border-radius: 12px;
+      object-fit: cover; background: #e8e8e8;
+      max-width: min(42vw, 220px); max-height: min(28vh, 200px);
+      box-shadow: 0 4px 14px rgba(0,0,0,.12);
+    }
+    .msg-image-wrap.img-hero img {
+      max-width: min(48vw, 260px); max-height: min(32vh, 240px);
+      border-radius: 14px;
+    }
+    .msg-image-wrap.img-card img {
+      max-width: min(36vw, 180px); max-height: min(24vh, 170px);
+    }
+    .msg-image-wrap.img-state img {
+      width: 48px; height: 48px; max-width: 48px; max-height: 48px;
+      border-radius: 50%; object-fit: cover;
+    }
+    @media (min-width: 768px) {
+      .msg-image-wrap.img-hero img { max-width: 240px; max-height: 220px; }
+      .msg-image-wrap.img-card img { max-width: 160px; max-height: 150px; }
+    }
+
   </style>
 </head>
 <body>
@@ -377,14 +401,19 @@
     /** Deja el inicio de la respuesta a la vista (mitad superior del área de chat) */
     function scrollToMsgStart(el) {
       if (!el) { scrollBottom(); return; }
-      try {
-        var cRect = conversation.getBoundingClientRect();
-        var eRect = el.getBoundingClientRect();
-        var delta = eRect.top - cRect.top - cRect.height * 0.18;
-        conversation.scrollTop = conversation.scrollTop + delta;
-      } catch (err) {
-        scrollBottom();
+      function go() {
+        try {
+          var cRect = conversation.getBoundingClientRect();
+          var eRect = el.getBoundingClientRect();
+          /* inicio del mensaje ~ mitad superior del área de chat */
+          var delta = eRect.top - cRect.top - cRect.height * 0.22;
+          conversation.scrollTop = conversation.scrollTop + delta;
+        } catch (err) {
+          scrollBottom();
+        }
       }
+      go();
+      requestAnimationFrame(function () { requestAnimationFrame(go); });
     }
     function activarPantallaGris() {
       document.body.classList.add('writing');
@@ -418,11 +447,24 @@
       }
       var row = el('div', 'msg bot');
       var av = el('img', 'avatar');
-      av.src = (data && data.image) || 'index_files/2_fBUK.jpg';
+      av.src = 'index_files/2_fBUK.jpg';
       av.alt = 'Apsara';
       row.appendChild(av);
       var col = document.createElement('div');
       col.style.maxWidth = '88%';
+      /* foto contextual (maestro / álbum / identidad) */
+      if (data && data.image) {
+        var wrap = document.createElement('div');
+        var sz = data.imageSize || 'card';
+        wrap.className = 'msg-image-wrap img-' + sz;
+        var big = document.createElement('img');
+        big.src = data.image;
+        big.alt = data.imageAlt || 'Vimana';
+        big.loading = 'lazy';
+        big.onerror = function () { wrap.style.display = 'none'; };
+        wrap.appendChild(big);
+        col.appendChild(wrap);
+      }
       col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
       if (data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
