@@ -533,6 +533,31 @@
       }
       row.appendChild(col);
       conversation.appendChild(row);
+
+      /* Segunda burbuja: búsquedas web (separada de lectura local) */
+      if (data && data.secondary_reply) {
+        var row2 = el('div', 'msg bot');
+        var av2 = el('img', 'avatar');
+        av2.src = 'index_files/2_fBUK.jpg';
+        av2.alt = 'Apsara';
+        row2.appendChild(av2);
+        var col2 = document.createElement('div');
+        col2.style.maxWidth = '88%';
+        col2.appendChild(el('div', 'bubble', data.secondary_reply));
+        if (data.secondary_links && data.secondary_links.length) {
+          var list2 = el('div', 'links');
+          data.secondary_links.forEach(function (L) {
+            var a = el('a', 'link-card');
+            a.href = L.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            a.appendChild(el('span', 'link-title', L.t || L.u));
+            list2.appendChild(a);
+          });
+          col2.appendChild(list2);
+        }
+        row2.appendChild(col2);
+        conversation.appendChild(row2);
+      }
+
       scrollToMsgStart(row);
     }
 
