@@ -153,7 +153,7 @@ app.post('/api/chat', async (req, res) => {
         await guardarMensaje('user', q);
         if (data && data.reply) await guardarMensaje('assistant', data.reply);
       })
-      .catch(() => {});
+      .catch((err) => console.error('Neon guardar:', err && err.message ? err.message : err));
 
     res.json(data);
   } catch (e) {
