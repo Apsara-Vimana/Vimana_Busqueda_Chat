@@ -223,8 +223,13 @@
       max-width: min(36vw, 180px); max-height: min(24vh, 170px);
     }
     .msg-image-wrap.img-state img {
-      width: 48px; height: 48px; max-width: 48px; max-height: 48px;
-      border-radius: 50%; object-fit: cover;
+      max-width: min(180px, 28vw);
+      max-height: min(180px, 28vw);
+      width: min(180px, 28vw);
+      height: min(180px, 28vw);
+      object-fit: cover;
+      border-radius: 12px;
+      aspect-ratio: 1 / 1;
     }
     @media (min-width: 768px) {
       .msg-image-wrap.img-hero img { max-width: 240px; max-height: 220px; }
@@ -441,6 +446,8 @@
 
     function botBubble(data) {
       activarPantallaGris();
+      var thStop = document.getElementById('thinkingHint');
+      if (thStop) thStop.remove();
       if (data && data.action === 'LIMPIAR') {
         limpiarChat();
         return;
