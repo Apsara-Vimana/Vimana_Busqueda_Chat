@@ -566,6 +566,19 @@
       sendBtn.disabled = on || !message.value.trim();
       message.disabled = on;
       typing.textContent = on ? 'Apsara está pensando…' : '';
+      var th = document.getElementById('thinkingHint');
+      if (on) {
+        if (!th) {
+          th = document.createElement('div');
+          th.id = 'thinkingHint';
+          th.className = 'msg bot';
+          th.innerHTML = '<img class="avatar" src="index_files/2_fBUK.jpg" alt="Apsara"/><div style="max-width:88%"><div class="msg-image-wrap img-state"><img src="/imagenes/Pensando.jpg" alt="Pensando" onerror="this.parentNode.style.display=\'none\'"/></div><div class="bubble">Pensando…</div></div>';
+          conversation.appendChild(th);
+          scrollBottom();
+        }
+      } else if (th) {
+        th.remove();
+      }
     }
 
     async function enviar() {
