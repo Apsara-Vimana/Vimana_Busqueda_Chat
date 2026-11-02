@@ -1,7 +1,7 @@
 const path = require('path');
 const { Readable } = require('stream');
 const express = require('express');
-const { procesar } = require('./lib/engine');
+const { procesar, setGemini } = require('./lib/engine');
 const { guardarMensaje } = require('./lib/neon');
 
 const app = express();
@@ -9,6 +9,109 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+/* ============================================================================
+   GEMINI — configuración y llamada (solo aquí en server.js)
+   Variables de entorno en Render (vale cualquiera de las dos):
+     GEMINI_KEY=...
+     GEMINI_API_KEY=...
+   URL oficial:
+     https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent
+   ============================================================================ */
+
+const GEMINI_MODEL = 'gemini-flash-latest';
+const GEMINI_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/' +
+  GEMINI_MODEL +
+  ':generateContent';
+const GEMINI_TIMEOUT_MS = 25000;
+
+function getGeminiKey() {
+  return (
+    (process.env.GEMINI_KEY || '').trim() ||
+    (process.env.GEMINI_API_KEY || '').trim()
+  );
+}
+
+/**
+ * Llama a Gemini con el formato oficial de Google.
+ * Respuesta siempre en español. Devuelve texto o null.
+ */
+async function llamarGemini(pregunta) {
+  const key = getGeminiKey();
+  if (!key) return null;
+
+  const textoPrompt =
+    'Eres Apsara Vimana, asistente del proyecto Vimana (música, arte y sabiduría). ' +
+    'Responde SIEMPRE en español, de forma clara, cálida y útil (máximo 350 palabras). ' +
+    'Si piden cursos, prácticas, búsquedas o información práctica, responde de forma concreta. ' +
+    'Si no sabes algo, dilo con humildad. No inventes fuentes.\n\n' +
+    'Pregunta del usuario: ' + String(pregunta || '').trim();
+
+  const payload = {
+    contents: [
+      {
+        parts: [{ text: textoPrompt }],
+      },
+    ],
+  };
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), GEMINI_TIMEOUT_MS);
+
+  try {
+    let r = await fetch(GEMINI_URL, {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': key,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!r.ok) {
+      r = await fetch(GEMINI_URL + '?key=' + encodeURIComponent(key), {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    if (!r.ok) {
+      const errText = await r.text().catch(() => '');
+      console.error('[Gemini] HTTP', r.status, errText.slice(0, 220));
+      return null;
+    }
+
+    const data = await r.json();
+    if (data && data.error && data.error.message) {
+      console.error('[Gemini] API:', data.error.message);
+      return null;
+    }
+
+    const texto =
+      data &&
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text;
+
+    if (!texto || !String(texto).trim()) return null;
+    return String(texto).trim().slice(0, 1800);
+  } catch (e) {
+    console.error('[Gemini] falló:', e.message || e);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// El motor usa esta función cuando no hay respuesta local
+setGemini(llamarGemini);
 
 function searxBase() {
   return (process.env.SEARXNG_URL || '').trim().replace(/\/$/, '');
@@ -64,6 +167,7 @@ app.get('/api/ping', async (_req, res) => {
     neon: Boolean(process.env.DATABASE_URL),
     searx: searxBase() || null,
     hf: Boolean(process.env.HUGGINGFACE_TOKEN),
+    gemini: Boolean(getGeminiKey()),
   });
 });
 
@@ -72,9 +176,7 @@ app.get('/api/wake-searx', async (_req, res) => {
 });
 
 /**
- * Proxy de audio: el navegador pide al MISMO origen (Render)
- * y el servidor descarga desde vimana.rf.gd / radios.
- * Así se evita bloqueo hotlink / CORS del hosting gratuito.
+ * Proxy de audio
  */
 app.get('/api/audio', async (req, res) => {
   try {
@@ -126,7 +228,6 @@ app.get('/api/audio', async (req, res) => {
     if (!upstream.body) {
       return res.end();
     }
-    // Stream Node 18+
     const nodeStream = Readable.fromWeb(upstream.body);
     nodeStream.on('error', () => {
       try {
@@ -137,6 +238,61 @@ app.get('/api/audio', async (req, res) => {
   } catch (e) {
     console.error('audio proxy', e.message);
     if (!res.headersSent) res.status(502).send('proxy fail');
+  }
+});
+
+/**
+ * Túnel opcional a Gemini (por si quieres probar la API directa).
+ * El chat principal usa /api/chat (no hace falta llamar esto desde el HTML).
+ */
+app.post('/api/gemini', async (req, res) => {
+  try {
+    const apiKey = getGeminiKey();
+    if (!apiKey) {
+      return res.status(500).json({
+        error: 'Falta GEMINI_KEY o GEMINI_API_KEY en las variables de Render',
+      });
+    }
+
+    const body =
+      req.body && Object.keys(req.body).length
+        ? req.body
+        : {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: String(
+                      (req.body && (req.body.mensaje || req.body.q || req.body.text)) || ''
+                    ),
+                  },
+                ],
+              },
+            ],
+          };
+
+    let response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      response = await fetch(GEMINI_URL + '?key=' + encodeURIComponent(apiKey), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    }
+
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (e) {
+    console.error('Error puente Gemini:', e.message);
+    res.status(502).json({ error: 'Error de conexión intermediada a Gemini' });
   }
 });
 
@@ -153,7 +309,9 @@ app.post('/api/chat', async (req, res) => {
         await guardarMensaje('user', q);
         if (data && data.reply) await guardarMensaje('assistant', data.reply);
       })
-      .catch((err) => console.error('Neon guardar:', err && err.message ? err.message : err));
+      .catch((err) =>
+        console.error('Neon guardar:', err && err.message ? err.message : err)
+      );
 
     res.json(data);
   } catch (e) {
@@ -170,5 +328,8 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log('Apsara Vimana on', PORT);
   console.log('SEARXNG_URL:', searxBase() || '(missing)');
-  wakeSearx().then((r) => console.log('wake-searx on boot:', r)).catch(() => {});
+  console.log('Gemini key:', getGeminiKey() ? 'presente' : 'AUSENTE');
+  wakeSearx()
+    .then((r) => console.log('wake-searx on boot:', r))
+    .catch(() => {});
 });
