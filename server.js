@@ -11,20 +11,17 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ============================================================================
-   GEMINI — configuración y llamada (solo aquí en server.js)
-   Variables de entorno en Render (vale cualquiera de las dos):
-     GEMINI_KEY=...
-     GEMINI_API_KEY=...
-   URL oficial:
-     https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent
+   GEMINI — todo aquí en server.js
+   Variables: GEMINI_KEY o GEMINI_API_KEY
    ============================================================================ */
 
-const GEMINI_MODEL = 'gemini-flash-latest';
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/' +
-  GEMINI_MODEL +
-  ':generateContent';
-const GEMINI_TIMEOUT_MS = 25000;
+const GEMINI_MODELS = [
+  'gemini-flash-latest',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+];
+const GEMINI_TIMEOUT_MS = 28000;
 
 function getGeminiKey() {
   return (
@@ -33,19 +30,32 @@ function getGeminiKey() {
   );
 }
 
+function geminiUrl(model) {
+  return (
+    'https://generativelanguage.googleapis.com/v1beta/models/' +
+    model +
+    ':generateContent'
+  );
+}
+
 /**
- * Llama a Gemini con el formato oficial de Google.
- * Respuesta siempre en español. Devuelve texto o null.
+ * Llama a Gemini (formato oficial Google).
+ * Prueba varios nombres de modelo por si "gemini-flash-latest" no está activo en la key.
+ * Siempre pide respuesta en español.
  */
 async function llamarGemini(pregunta) {
   const key = getGeminiKey();
-  if (!key) return null;
+  if (!key) {
+    console.error('[Gemini] sin API key');
+    return null;
+  }
 
   const textoPrompt =
     'Eres Apsara Vimana, asistente del proyecto Vimana (música, arte y sabiduría). ' +
-    'Responde SIEMPRE en español, de forma clara, cálida y útil (máximo 350 palabras). ' +
-    'Si piden cursos, prácticas, búsquedas o información práctica, responde de forma concreta. ' +
-    'Si no sabes algo, dilo con humildad. No inventes fuentes.\n\n' +
+    'Responde SIEMPRE en español, claro, cálido y útil (máximo 400 palabras). ' +
+    'Si piden un poema, una explicación, cursos o información práctica, responde el contenido directamente. ' +
+    'No digas que vas a buscar en internet: responde tú. ' +
+    'Si no sabes algo, dilo con humildad.\n\n' +
     'Pregunta del usuario: ' + String(pregunta || '').trim();
 
   const payload = {
@@ -56,68 +66,87 @@ async function llamarGemini(pregunta) {
     ],
   };
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), GEMINI_TIMEOUT_MS);
+  for (const model of GEMINI_MODELS) {
+    const url = geminiUrl(model);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), GEMINI_TIMEOUT_MS);
 
-  try {
-    let r = await fetch(GEMINI_URL, {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-goog-api-key': key,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!r.ok) {
-      r = await fetch(GEMINI_URL + '?key=' + encodeURIComponent(key), {
+    try {
+      // Header oficial
+      let r = await fetch(url, {
         method: 'POST',
         signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': key,
+        },
         body: JSON.stringify(payload),
       });
+
+      // Respaldo ?key=
+      if (!r.ok) {
+        r = await fetch(url + '?key=' + encodeURIComponent(key), {
+          method: 'POST',
+          signal: ctrl.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const raw = await r.text();
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch (_) {
+        data = null;
+      }
+
+      if (!r.ok) {
+        const msg =
+          (data && data.error && data.error.message) || raw.slice(0, 180);
+        console.error('[Gemini]', model, 'HTTP', r.status, msg);
+        clearTimeout(timer);
+        continue; // probar siguiente modelo
+      }
+
+      if (data && data.error && data.error.message) {
+        console.error('[Gemini]', model, 'API:', data.error.message);
+        clearTimeout(timer);
+        continue;
+      }
+
+      const texto =
+        data &&
+        data.candidates &&
+        data.candidates[0] &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts &&
+        data.candidates[0].content.parts[0] &&
+        data.candidates[0].content.parts[0].text;
+
+      clearTimeout(timer);
+
+      if (texto && String(texto).trim()) {
+        console.log('[Gemini] OK con modelo', model);
+        return String(texto).trim().slice(0, 1800);
+      }
+
+      console.error('[Gemini]', model, 'respuesta vacía');
+    } catch (e) {
+      clearTimeout(timer);
+      console.error('[Gemini]', model, 'falló:', e.message || e);
     }
-
-    if (!r.ok) {
-      const errText = await r.text().catch(() => '');
-      console.error('[Gemini] HTTP', r.status, errText.slice(0, 220));
-      return null;
-    }
-
-    const data = await r.json();
-    if (data && data.error && data.error.message) {
-      console.error('[Gemini] API:', data.error.message);
-      return null;
-    }
-
-    const texto =
-      data &&
-      data.candidates &&
-      data.candidates[0] &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts &&
-      data.candidates[0].content.parts[0] &&
-      data.candidates[0].content.parts[0].text;
-
-    if (!texto || !String(texto).trim()) return null;
-    return String(texto).trim().slice(0, 1800);
-  } catch (e) {
-    console.error('[Gemini] falló:', e.message || e);
-    return null;
-  } finally {
-    clearTimeout(timer);
   }
+
+  return null;
 }
 
-// El motor usa esta función cuando no hay respuesta local
 setGemini(llamarGemini);
 
 function searxBase() {
   return (process.env.SEARXNG_URL || '').trim().replace(/\/$/, '');
 }
 
-/** Dominios permitidos para proxy de audio (anti-abuso) */
 function isAllowedAudioHost(hostname) {
   const h = String(hostname || '').toLowerCase();
   const allow = [
@@ -159,6 +188,16 @@ async function wakeSearx() {
   }
 }
 
+function pareceSoloBusquedaWeb(data) {
+  const r = (data && data.reply) || '';
+  return (
+    r.includes('VIMANA (Búsqueda') ||
+    r.includes('📘 **Wikipedia**') ||
+    r.includes('No hubo resultados en SearXNG') ||
+    r.includes('Buscar en Yahoo')
+  );
+}
+
 app.get('/api/ping', async (_req, res) => {
   wakeSearx().catch(() => {});
   res.json({
@@ -175,9 +214,6 @@ app.get('/api/wake-searx', async (_req, res) => {
   res.json(await wakeSearx());
 });
 
-/**
- * Proxy de audio
- */
 app.get('/api/audio', async (req, res) => {
   try {
     const raw = String(req.query.u || '').trim();
@@ -241,10 +277,6 @@ app.get('/api/audio', async (req, res) => {
   }
 });
 
-/**
- * Túnel opcional a Gemini (por si quieres probar la API directa).
- * El chat principal usa /api/chat (no hace falta llamar esto desde el HTML).
- */
 app.post('/api/gemini', async (req, res) => {
   try {
     const apiKey = getGeminiKey();
@@ -254,42 +286,26 @@ app.post('/api/gemini', async (req, res) => {
       });
     }
 
-    const body =
-      req.body && Object.keys(req.body).length
-        ? req.body
-        : {
-            contents: [
-              {
-                parts: [
-                  {
-                    text: String(
-                      (req.body && (req.body.mensaje || req.body.q || req.body.text)) || ''
-                    ),
-                  },
-                ],
-              },
-            ],
-          };
+    const text =
+      (req.body &&
+        (req.body.mensaje ||
+          req.body.q ||
+          req.body.text ||
+          (req.body.contents &&
+            req.body.contents[0] &&
+            req.body.contents[0].parts &&
+            req.body.contents[0].parts[0] &&
+            req.body.contents[0].parts[0].text))) ||
+      '';
 
-    let response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-goog-api-key': apiKey,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      response = await fetch(GEMINI_URL + '?key=' + encodeURIComponent(apiKey), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+    const out = await llamarGemini(String(text));
+    if (!out) {
+      return res.status(502).json({ error: 'Gemini no respondió' });
     }
-
-    const data = await response.json();
-    res.status(response.status).json(data);
+    res.json({
+      candidates: [{ content: { parts: [{ text: out }] } }],
+      reply: out,
+    });
   } catch (e) {
     console.error('Error puente Gemini:', e.message);
     res.status(502).json({ error: 'Error de conexión intermediada a Gemini' });
@@ -301,7 +317,22 @@ app.post('/api/chat', async (req, res) => {
     wakeSearx().catch(() => {});
 
     const q = (req.body && (req.body.q || req.body.message || req.body.text)) || '';
-    const data = await procesar(String(q));
+    let data = await procesar(String(q));
+
+    // Si el motor solo devolvió búsqueda web / wiki, forzar Gemini otra vez
+    if (pareceSoloBusquedaWeb(data)) {
+      const g = await llamarGemini(String(q));
+      if (g) {
+        data = {
+          reply: g,
+          links: [],
+          options: ['ayuda', 'limpiar', 'estado'],
+          image: '/imagenes/Pensando.jpg',
+          imageSize: 'state',
+          imageAlt: 'Apsara pensando',
+        };
+      }
+    }
 
     Promise.resolve()
       .then(async () => {
