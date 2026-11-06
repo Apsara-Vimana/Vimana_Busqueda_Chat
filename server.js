@@ -60,7 +60,7 @@ async function wakeSearx() {
   const base = searxBase();
   if (!base) return { ok: false, reason: 'no SEARXNG_URL' };
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 12000);
+  const t = setTimeout(() => ctrl.abort(), 4000);
   try {
     const r = await fetch(base + '/', {
       signal: ctrl.signal,
@@ -158,7 +158,8 @@ app.post('/api/chat', async (req, res) => {
 
     const q =
       (req.body && (req.body.q || req.body.message || req.body.text)) || '';
-    const data = await procesar(String(q));
+    const adminMode = !!(req.body && (req.body.adminMode || req.body.admin));
+    const data = await procesar(String(q), { adminMode });
 
     Promise.resolve()
       .then(async () => {

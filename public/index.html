@@ -713,10 +713,28 @@
       userBubble(q);
       message.value = '';
       message.style.height = 'auto';
+
+      var qn = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (/^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) || qn === 'word' || /guarda en word|descarga el chat|dame la descarga/.test(qn)) {
+        if (lastBotText) {
+          downloadWordDoc(lastBotText, 'apsara-vimana-chat');
+          botBubble({
+            reply: '📄 **Listo.** Se descargó un archivo Word con el último mensaje de Apsara.',
+            options: ['ayuda', 'limpiar'],
+          });
+        } else {
+          botBubble({
+            reply: 'Aún no hay texto de Apsara para guardar. Pregunta algo y luego escribe *descargar word*.',
+            options: ['ayuda'],
+          });
+        }
+        return;
+      }
+
       setBusy(true);
       try {
         var ctrl = new AbortController();
-        var to = setTimeout(function () { ctrl.abort(); }, 55000);
+        var to = setTimeout(function () { ctrl.abort(); }, 28000);
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -725,27 +743,19 @@
         });
         clearTimeout(to);
         var data = null;
-        try {
-          data = await r.json();
-        } catch (parseErr) {
-          data = null;
-        }
+        try { data = await r.json(); } catch (e) { data = null; }
         if (data && data.reply) {
           botBubble(data);
         } else {
           botBubble({
-            reply:
-              'Namaste. 🙏 No llegó la respuesta completa. Escribe de nuevo *más sobre Sri Sathya Sai Baba* o el nombre del maestro; también puedes usar *Mensajes de Vimana*.',
-            links: [],
-            options: ['más sobre Sri Sathya Sai Baba', 'Mensajes de Vimana', 'ayuda'],
+            reply: 'Namaste. 🙏 No llegó respuesta. Prueba de nuevo o escribe *ayuda*.',
+            options: ['ayuda', 'limpiar'],
           });
         }
       } catch (e) {
         botBubble({
-          reply:
-            'Namaste. 🙏 Hubo un silencio breve en la red. Reintenta con el botón *más sobre* + nombre del maestro.',
-          links: [],
-          options: ['más sobre Sri Sathya Sai Baba', 'ayuda'],
+          reply: 'Namaste. 🙏 La red tardó. Prueba una pregunta corta, ej. *quien es sai baba*.',
+          options: ['quien es sai baba', 'ayuda', 'limpiar'],
         });
       } finally {
         setBusy(false);
