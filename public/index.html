@@ -715,11 +715,15 @@
       message.style.height = 'auto';
       setBusy(true);
       try {
+        var ctrl = new AbortController();
+        var to = setTimeout(function () { ctrl.abort(); }, 55000);
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q, adminMode: adminMode })
+          body: JSON.stringify({ q: q, adminMode: adminMode }),
+          signal: ctrl.signal
         });
+        clearTimeout(to);
         var data = null;
         try {
           data = await r.json();
