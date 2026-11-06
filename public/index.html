@@ -444,7 +444,36 @@
       scrollBottom();
     }
 
+    
+    var lastBotText = '';
+    function downloadWordDoc(text, name) {
+      try {
+        var body = String(text || lastBotText || '').trim();
+        if (!body) return;
+        var html =
+          '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Apsara Vimana</title></head><body>' +
+          body
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>') +
+          '</body></html>';
+        var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (name || 'apsara-vimana') + '.doc';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          URL.revokeObjectURL(a.href);
+          a.remove();
+        }, 800);
+      } catch (e) {}
+    }
+
     function botBubble(data) {
+      if (data && data.reply) lastBotText = data.reply;
+
       activarPantallaGris();
       var thStop = document.getElementById('thinkingHint');
       if (thStop) thStop.remove();
@@ -522,6 +551,17 @@
           }
         });
         col.appendChild(list);
+      }
+      if (data && data.download_text) {
+        var dw = el('div', 'options');
+        var db = el('button', 'chip');
+        db.type = 'button';
+        db.textContent = '📄 Descargue desde aquí (Word)';
+        db.addEventListener('click', function () {
+          downloadWordDoc(data.download_text, data.download_name || 'apsara-vimana');
+        });
+        dw.appendChild(db);
+        bubble.appendChild(dw);
       }
       if (data && data.options && data.options.length) {
         var opts = el('div', 'options');
