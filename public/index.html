@@ -467,6 +467,8 @@
 
     
     var lastBotText = '';
+    var adminMode = sessionStorage.getItem('vimana_admin55') === '1';
+
 
     // —— Voz del navegador (gratis, sin servidor) ——
     var voiceOn = false;
@@ -550,6 +552,13 @@
       if (data && data.action === 'LIMPIAR') {
         limpiarChat();
         return;
+      }
+      if (data && data.action === 'ADMIN55_TOGGLE') {
+        adminMode = !adminMode;
+        try { sessionStorage.setItem('vimana_admin55', adminMode ? '1' : '0'); } catch (e) {}
+        data.reply = adminMode
+          ? '🔓 **Admin55 activado.** Temas más amplios permitidos. Escribe otra vez *admin55* para cerrar.'
+          : '🔒 **Admin55 desactivado.** Guía de espiritualidad y bienestar. Escribe *admin55* para abrir.';
       }
       var row = el('div', 'msg bot');
       var av = el('img', 'avatar');
@@ -709,7 +718,7 @@
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q })
+          body: JSON.stringify({ q: q , adminMode: adminMode })
         });
         var data = await r.json();
         botBubble(data);
