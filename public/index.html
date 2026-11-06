@@ -718,12 +718,31 @@
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q , adminMode: adminMode })
+          body: JSON.stringify({ q: q, adminMode: adminMode })
         });
-        var data = await r.json();
-        botBubble(data);
+        var data = null;
+        try {
+          data = await r.json();
+        } catch (parseErr) {
+          data = null;
+        }
+        if (data && data.reply) {
+          botBubble(data);
+        } else {
+          botBubble({
+            reply:
+              'Namaste. 🙏 No llegó la respuesta completa. Escribe de nuevo *más sobre Sri Sathya Sai Baba* o el nombre del maestro; también puedes usar *Mensajes de Vimana*.',
+            links: [],
+            options: ['más sobre Sri Sathya Sai Baba', 'Mensajes de Vimana', 'ayuda'],
+          });
+        }
       } catch (e) {
-        botBubble({ reply: 'Namaste. 🙏 La respuesta tardó o hubo un momento de silencio en la red. Prueba de nuevo o escribe *más sobre* el maestro que te interesa.', links: [], options: ['ayuda'] });
+        botBubble({
+          reply:
+            'Namaste. 🙏 Hubo un silencio breve en la red. Reintenta con el botón *más sobre* + nombre del maestro.',
+          links: [],
+          options: ['más sobre Sri Sathya Sai Baba', 'ayuda'],
+        });
       } finally {
         setBusy(false);
         message.focus();
