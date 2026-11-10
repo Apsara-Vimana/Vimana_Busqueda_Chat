@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="theme-auto center-alignment-no js" lang="es-ES">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apsara Vimana Búsqueda</title>
+  <link rel="stylesheet" href="ApsaraVimanaSearXNG_files/sxng-ltr.min_rEqA.css" type="text/css" media="screen">
+  <style>
+    /* Estilos para una portada limpia, amplia y elegante */
+    body.index_endpoint {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    main#main_index {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+    .index {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .brand-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .brand-header img {
+      display: block;
+      margin: 0 auto 12px auto;
+      border-radius: 12px;
+    }
+    .brand-header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+    }
+
+    /* Barra de búsqueda amplia, fluida y elegante */
+    form#search {
+      width: 100%;
+    }
+    #search_header, #search_view, .search_box {
+      width: 100%;
+    }
+    .search_box {
+      display: flex;
+      align-items: center;
+      position: relative;
+      border-radius: 9999px; /* Estilo píldora elegante */
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      transition: all 0.3s ease;
+      background: #fff;
+      overflow: hidden;
+    }
+    .search_box:focus-within {
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+    .search_box input#q {
+      flex: 1;
+      height: 52px;
+      padding: 0 20px;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 1.05rem;
+    }
+    .search_box button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0 16px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      transition: color 0.2s;
+    }
+    .search_box button:hover {
+      color: #000;
+    }
+    /* Control estricto del tamaño de los iconos SVG para que no se disparen */
+    .search_box button svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.5px;
+    }
+  </style>
+</head>
+<body class="index_endpoint">
+  <main id="main_index">
+
+    <div class="index">
+      <!-- Logo y Título abajo del logo -->
+      <div class="brand-header">
+        <img src="v2.png" alt="Apsara Logo" width="68" height="68">
+        <h1>Apsara Vimana Búsqueda</h1>
+      </div>
+
+      <!-- Formulario de búsqueda configurado hacia Render -->
+      <form id="search" method="GET" role="search" onsubmit="return handleSearch(event)">
+        <div id="search_header">
+          <div id="search_view">
+            <div class="search_box">
+              <input id="q" name="q" type="text" placeholder="Buscar con Apsara Vimana..." autocomplete="off" autocapitalize="none" spellcheck="false" autocorrect="off" dir="auto" required autofocus>
+              
+              <button id="clear_search" type="reset" aria-label="limpiar">
+                <span>
+                  <svg viewBox="0 0 512 512" class="ionicon sxng-icon-set-big" aria-hidden="true">
+                    <path d="M368 368 144 144M368 144 144 368" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32px"></path>
+                  </svg>
+                </span>
+              </button>
+
+              <button id="send_search" type="submit" aria-label="buscar">
+                <span>
+                  <svg viewBox="0 0 512 512" class="ionicon sxng-icon-set-big" aria-hidden="true">
+                    <path d="M221.09 64a157.09 157.09 0 1 0 157.09 157.09A157.1 157.1 0 0 0 221.09 64Z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32px"></path>
+                    <path d="M338.29 338.29 448 448" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32px"></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" name="category_general" value="1">
+        <input type="hidden" name="language" value="es-ES">
+        <input type="hidden" name="time_range" value="">
+        <input type="hidden" name="safesearch" value="0">
+        <input type="hidden" name="theme" value="simple">
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&nbsp;</p>
+  </footer>
+
+  <script>
+    // URL base de SearXNG en Render (usando tu variable SEARXNG_URL)
+    const SEARXNG_BASE_URL = window.SEARXNG_URL || "https://apsara-searxng.onrender.com";
+
+    function handleSearch(event) {
+      event.preventDefault();
+      const form = event.target;
+      const query = form.querySelector('#q').value;
+
+      if (!query.trim()) return false;
+
+      // Generar URL con los parámetros hacia tu instancia en Render
+      const params = new URLSearchParams(new FormData(form));
+      window.location.href = `${SEARXNG_BASE_URL}/search?${params.toString()}`;
+      return false;
+    }
+  </script>
+</body>
+</html>
