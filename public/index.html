@@ -298,6 +298,43 @@
   <script>
   (function () {
     var API = '/api/chat';
+    function __renderJamendoTracks(tracks) {
+      var trackBox = document.createElement('div');
+      trackBox.className = 'jamendo-tracks';
+      trackBox.style.cssText = 'margin:8px 12px;display:flex;flex-direction:column;gap:8px;';
+      (tracks || []).forEach(function (t) {
+        var card = document.createElement('div');
+        card.style.cssText = 'background:rgba(255,255,255,0.12);border-radius:10px;padding:8px;';
+        card.innerHTML = '<div style="font-weight:600;font-size:13px;margin-bottom:4px;">' +
+          (t.name || 'Pista') + ' <span style="font-weight:400;opacity:0.8;">· ' + (t.artist || '') + '</span></div>';
+        var audio = document.createElement('audio');
+        audio.controls = true;
+        audio.preload = 'none';
+        audio.src = t.audio || '';
+        audio.style.width = '100%';
+        audio.style.height = '36px';
+        card.appendChild(audio);
+        trackBox.appendChild(card);
+      });
+      conversation.appendChild(trackBox);
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+    window.__renderJamendoTracks = __renderJamendoTracks;
+    function collectHistory() {
+      var nodes = conversation.querySelectorAll('.msg');
+      var hist = [];
+      for (var i = 0; i < nodes.length; i++) {
+        var el = nodes[i];
+        var role = el.classList.contains('user') ? 'user' : 'assistant';
+        var textEl = el.querySelector('.bubble') || el;
+        var text = (textEl.innerText || textEl.textContent || '').trim();
+        if (!text || text.length < 2) continue;
+        hist.push({ role: role, content: text.slice(0, 900) });
+      }
+      // últimos 8 turnos (sin el mensaje actual aún no enviado)
+      return hist.slice(-8);
+    }
+
     var conversation = document.getElementById('conversation');
     var form = document.getElementById('composer');
     var message = document.getElementById('message');
@@ -738,7 +775,7 @@
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q, adminMode: adminMode }),
+          body: JSON.stringify({ q: q, adminMode: adminMode, history: collectHistory() }),
           signal: ctrl.signal
         });
         clearTimeout(to);
@@ -746,6 +783,7 @@
         try { data = await r.json(); } catch (e) { data = null; }
         if (data && data.reply) {
           botBubble(data);
+          if (data.tracks && data.tracks.length) { try { window.__renderJamendoTracks && window.__renderJamendoTracks(data.tracks); } catch(e){} }
         } else {
           botBubble({
             reply: 'Namaste. 🙏 No llegó respuesta. Prueba de nuevo o escribe *ayuda*.',
