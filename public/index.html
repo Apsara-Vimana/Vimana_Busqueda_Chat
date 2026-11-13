@@ -617,6 +617,28 @@
         wrap.appendChild(big);
         col.appendChild(wrap);
       }
+      // Reproductores arriba (orden: pistas → texto)
+      if (data && data.tracks && data.tracks.length) {
+        var trackBox = document.createElement('div');
+        trackBox.className = 'vimana-tracks';
+        trackBox.style.cssText = 'margin:0 0 10px;display:flex;flex-direction:column;gap:8px;max-width:min(100%,340px);';
+        data.tracks.forEach(function (t) {
+          var card = document.createElement('div');
+          card.style.cssText = 'background:rgba(255,255,255,0.55);border-radius:12px;padding:8px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);';
+          var title = document.createElement('div');
+          title.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:4px;line-height:1.3;';
+          title.textContent = (t.name || 'Pista') + (t.artist ? ' · ' + t.artist : '');
+          var audio = document.createElement('audio');
+          audio.controls = true;
+          audio.preload = 'none';
+          audio.src = t.audio || '';
+          audio.style.cssText = 'width:100%;height:36px;';
+          card.appendChild(title);
+          card.appendChild(audio);
+          trackBox.appendChild(card);
+        });
+        col.appendChild(trackBox);
+      }
       col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
       if (data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
@@ -640,7 +662,7 @@
         });
         if (mlist.childNodes.length) col.appendChild(mlist);
       }
-      if (data && data.links && data.links.length) {
+      if (data && data.links && data.links.length && !(data.tracks && data.tracks.length)) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
           if (isAudioLink(L.u) && /\.mp3(\?|$)/i.test(String(L.u))) {
@@ -783,7 +805,6 @@
         try { data = await r.json(); } catch (e) { data = null; }
         if (data && data.reply) {
           botBubble(data);
-          if (data.tracks && data.tracks.length) { try { window.__renderJamendoTracks && window.__renderJamendoTracks(data.tracks); } catch(e){} }
         } else {
           botBubble({
             reply: 'Namaste. 🙏 No llegó respuesta. Prueba de nuevo o escribe *ayuda*.',
