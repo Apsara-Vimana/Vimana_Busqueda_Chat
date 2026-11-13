@@ -300,7 +300,7 @@
       <form id="composer" autocomplete="off">
         <span class="char-ghost" id="charGhost" aria-hidden="true"></span>
         <textarea id="message" rows="1" maxlength="600" placeholder="Escribe tu mensaje..." enterkeyhint="send"></textarea>
-        <button type="button" id="micBtn" title="Hablar con Apsara" aria-label="Micrófono">🎤</button>
+        
         <button type="button" id="voiceToggle" title="Voz de Apsara on/off" aria-label="Voz">🔇</button>
         <button type="submit" id="send" aria-label="Enviar" disabled>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -369,10 +369,9 @@
     var form = document.getElementById('composer');
     var message = document.getElementById('message');
     var sendBtn = document.getElementById('send');
-    var micBtn = document.getElementById('micBtn');
+    var micBtn = null;
     var voiceToggle = document.getElementById('voiceToggle');
-    if (micBtn) micBtn.addEventListener('click', function () { voiceOn = true; if (voiceToggle) voiceToggle.textContent = '🔊'; startMic(); });
-    if (voiceToggle) voiceToggle.addEventListener('click', function () {
+        if (voiceToggle) voiceToggle.addEventListener('click', function () {
       voiceOn = !voiceOn;
       voiceToggle.textContent = voiceOn ? '🔊' : '🔇';
       if (!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel();
@@ -483,7 +482,11 @@
 
 
     function cleanUrl(u) {
-      return String(u || '').replace(/[)\],.;:!?»"'\]+$/g, '');
+      var s = String(u || '');
+      while (s.length && ')].,;:!?»"\''.indexOf(s.charAt(s.length - 1)) >= 0) {
+        s = s.slice(0, -1);
+      }
+      return s;
     }
     function extractHttpUrls(text) {
       var raw = String(text || '');
@@ -601,48 +604,54 @@
 
     // —— Voz del navegador (gratis, sin servidor) ——
     var voiceOn = false;
-    function speakText(text) {
+        function speakText(text) {
       try {
-        if (!voiceOn || !window.speechSynthesis) return;
+        if (!voiceOn) return;
+        if (!window.speechSynthesis) {
+          console.warn('speechSynthesis no disponible');
+          return;
+        }
         var clean = String(text || '')
           .replace(/\*\*/g, '')
           .replace(/[_`#]/g, '')
           .replace(/https?:\/\/\S+/g, '')
           .replace(/\n+/g, '. ')
           .trim();
-        if (!clean) return;
+        if (!clean || clean.length < 2) return;
         window.speechSynthesis.cancel();
-        var u = new SpeechSynthesisUtterance(clean.slice(0, 1200));
+        var u = new SpeechSynthesisUtterance(clean.slice(0, 800));
         u.lang = 'es-ES';
-        u.rate = 0.95;
-        var voices = window.speechSynthesis.getVoices() || [];
-        var es = voices.find(function (v) { return /es-ES|es_MX|Spanish/i.test(v.lang + v.name); });
-        if (es) u.voice = es;
-        window.speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-    function startMic() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        botBubble({ reply: 'Tu navegador no admite dictado por micrófono. Prueba Chrome o Edge.', options: ['ayuda'] });
-        return;
-      }
-      var rec = new SR();
-      rec.lang = 'es-ES';
-      rec.interimResults = false;
-      rec.maxAlternatives = 1;
-      rec.onresult = function (ev) {
-        var t = ev.results[0][0].transcript;
-        if (t) {
-          input.value = t;
-          enviar();
+        u.rate = 1;
+        u.pitch = 1;
+        var pickVoice = function () {
+          var voices = window.speechSynthesis.getVoices() || [];
+          var es = voices.filter(function (v) {
+            return (v.lang || '').toLowerCase().indexOf('es') === 0;
+          });
+          if (es.length) u.voice = es[0];
+          window.speechSynthesis.speak(u);
+        };
+        var voices = window.speechSynthesis.getVoices();
+        if (!voices || !voices.length) {
+          window.speechSynthesis.onvoiceschanged = function () {
+            window.speechSynthesis.onvoiceschanged = null;
+            pickVoice();
+          };
+          // algunos navegadores cargan voces con retraso
+          setTimeout(pickVoice, 250);
+        } else {
+          pickVoice();
         }
-      };
-      rec.onerror = function () {
-        botBubble({ reply: 'No escuché bien. Pulsa el micrófono e inténtalo de nuevo.', options: ['ayuda'] });
-      };
-      rec.start();
+      } catch (e) {
+        console.warn('voz', e);
+      }
     }
+
+
+        function startMic() {
+      /* micrófono desactivado a petición */
+    }
+
 
     function downloadWordDoc(text, name) {
       try {
