@@ -105,6 +105,36 @@
     }
     .msg.user .bubble { background: var(--user); border-bottom-right-radius: 0.25rem; }
     .msg.bot .bubble { background: var(--bot); border-bottom-left-radius: 0.25rem; }
+    .bubble a, .bubble a:visited {
+      color: #1565c0 !important;
+      text-decoration: underline;
+      pointer-events: auto !important;
+      cursor: pointer;
+      word-break: break-all;
+      font-weight: 500;
+    }
+    .bubble a:hover { color: #0d47a1 !important; }
+    .yt-links {
+      margin: 0.4rem 0 0.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 88%;
+    }
+    .yt-links a {
+      display: block;
+      background: #fff;
+      color: #1565c0 !important;
+      text-decoration: underline;
+      border-radius: 0.65rem;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #90caf9;
+      font-size: 0.8rem;
+      font-weight: 600;
+      word-break: break-all;
+      pointer-events: auto;
+      cursor: pointer;
+    }
     .links { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
     .link-card {
       display: block; text-decoration: none; color: #1a3a5c;
@@ -452,26 +482,67 @@
     updateCharGhost();
 
 
+    function cleanUrl(u) {
+      return String(u || '').replace(/[)\],.;:!?»"'\]+$/g, '');
+    }
+    function extractHttpUrls(text) {
+      var raw = String(text || '');
+      var re = /https?:\/\/[^\s<>\]"']+/gi;
+      var out = [];
+      var m;
+      while ((m = re.exec(raw)) !== null) {
+        var u = cleanUrl(m[0]);
+        if (u && out.indexOf(u) < 0) out.push(u);
+      }
+      return out;
+    }
     function linkifyBubble(elBubble, text) {
       var raw = String(text || '');
       elBubble.textContent = '';
-      var re = /(https?:\/\/[^\s<>\]"']+)/g;
+      var re = /https?:\/\/[^\s<>\]"']+/gi;
       var last = 0;
       var m;
       while ((m = re.exec(raw)) !== null) {
         if (m.index > last) {
           elBubble.appendChild(document.createTextNode(raw.slice(last, m.index)));
         }
+        var href = cleanUrl(m[0]);
         var a = document.createElement('a');
-        a.href = m[1];
+        a.href = href;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        a.textContent = m[1];
-        a.style.wordBreak = 'break-all';
+        a.textContent = href;
+        a.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+        });
         elBubble.appendChild(a);
-        last = m.index + m[1].length;
+        last = m.index + m[0].length;
       }
       if (last < raw.length) elBubble.appendChild(document.createTextNode(raw.slice(last)));
+    }
+    function appendUrlButtons(col, text) {
+      var urls = extractHttpUrls(text).filter(function (u) {
+        return !/jamendo\.com/i.test(u);
+      });
+      if (!urls.length) return;
+      var box = document.createElement('div');
+      box.className = 'yt-links';
+      urls.forEach(function (u, i) {
+        var a = document.createElement('a');
+        a.href = u;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        var label = u;
+        if (/youtube\.com|youtu\.be/i.test(u)) label = '▶ Abrir en YouTube';
+        else if (/spotify\.com/i.test(u)) label = '▶ Abrir en Spotify';
+        else if (/vimana\.rf\.gd/i.test(u)) label = '▶ Abrir en Vimana';
+        else label = '▶ Abrir enlace';
+        if (urls.length > 1) label = (i + 1) + '. ' + label;
+        a.textContent = label;
+        a.title = u;
+        box.appendChild(a);
+      });
+      col.appendChild(box);
     }
     function el(tag, cls, text) {
       var e = document.createElement(tag);
@@ -696,8 +767,10 @@
       }
 
       var bub = el('div', 'bubble');
-      linkifyBubble(bub, (data && data.reply) || '…');
+      var replyText = (data && data.reply) || '…';
+      linkifyBubble(bub, replyText);
       col.appendChild(bub);
+      try { appendUrlButtons(col, replyText); } catch (e) {}
       if (!musicLayout && data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
         data.media.forEach(function (M) {
