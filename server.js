@@ -159,7 +159,8 @@ app.post('/api/chat', async (req, res) => {
     const q =
       (req.body && (req.body.q || req.body.message || req.body.text)) || '';
     const adminMode = !!(req.body && (req.body.adminMode || req.body.admin));
-    const data = await procesar(String(q), { adminMode });
+    const history = (req.body && Array.isArray(req.body.history)) ? req.body.history : [];
+    const data = await procesar(String(q), { adminMode, history });
 
     Promise.resolve()
       .then(async () => {
