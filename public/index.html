@@ -452,6 +452,27 @@
     updateCharGhost();
 
 
+    function linkifyBubble(elBubble, text) {
+      var raw = String(text || '');
+      elBubble.textContent = '';
+      var re = /(https?:\/\/[^\s<>\]"']+)/g;
+      var last = 0;
+      var m;
+      while ((m = re.exec(raw)) !== null) {
+        if (m.index > last) {
+          elBubble.appendChild(document.createTextNode(raw.slice(last, m.index)));
+        }
+        var a = document.createElement('a');
+        a.href = m[1];
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = m[1];
+        a.style.wordBreak = 'break-all';
+        elBubble.appendChild(a);
+        last = m.index + m[1].length;
+      }
+      if (last < raw.length) elBubble.appendChild(document.createTextNode(raw.slice(last)));
+    }
     function el(tag, cls, text) {
       var e = document.createElement(tag);
       if (cls) e.className = cls;
@@ -639,8 +660,45 @@
         });
         col.appendChild(trackBox);
       }
-      col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
-      if (data && data.media && data.media.length) {
+
+      var musicLayout =
+        (data && data.tracks && data.tracks.length) ||
+        (data && data.links && data.links.some(function (L) {
+          return /vimana\.rf\.gd/i.test(String((L && L.u) || ''));
+        }));
+      // Radios / media arriba en layout musical
+      if (musicLayout && data && data.media && data.media.length) {
+        var mlistTop = el('div', 'media-list');
+        data.media.forEach(function (M) {
+          var b = el('button', 'chip media-chip');
+          b.type = 'button';
+          b.appendChild(el('span', 'ico', '📻'));
+          b.appendChild(document.createTextNode(M.t || 'Radio'));
+          b.addEventListener('click', function () {
+            if (M.u) playRadioInChat(M.u, M.t);
+          });
+          mlistTop.appendChild(b);
+        });
+        if (mlistTop.childNodes.length) col.appendChild(mlistTop);
+      }
+      if (musicLayout && data && data.links && data.links.length) {
+        var listTop = el('div', 'links');
+        data.links.forEach(function (L) {
+          var a = document.createElement('a');
+          a.className = 'link-card';
+          a.href = L.u || '#';
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.appendChild(el('span', 'link-title', L.t || 'Abrir'));
+          listTop.appendChild(a);
+        });
+        col.appendChild(listTop);
+      }
+
+      var bub = el('div', 'bubble');
+      linkifyBubble(bub, (data && data.reply) || '…');
+      col.appendChild(bub);
+      if (!musicLayout && data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
         data.media.forEach(function (M) {
           var u = String(M.u || '');
@@ -662,7 +720,7 @@
         });
         if (mlist.childNodes.length) col.appendChild(mlist);
       }
-      if (data && data.links && data.links.length && !(data.tracks && data.tracks.length)) {
+      if (!musicLayout && data && data.links && data.links.length && !(data.tracks && data.tracks.length)) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
           if (isAudioLink(L.u) && /\.mp3(\?|$)/i.test(String(L.u))) {
