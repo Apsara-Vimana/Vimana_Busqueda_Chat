@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#B0B8BF" />
   <title>Apsara Vimana — asistente</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <meta name="description" content="Conversa con Apsara sobre música, arte y sabiduría." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -139,6 +141,40 @@
     }
     .bubble-table tr:last-child td { border-bottom: none; }
     .bubble-table tr:nth-child(even) td { background: #f7fafc; }
+    .chat-map {
+      width: 100%;
+      max-width: 340px;
+      height: 220px;
+      border-radius: 12px;
+      margin: 0.35rem 0 0.5rem;
+      border: 1px solid rgba(0,0,0,0.1);
+      z-index: 1;
+      background: #dfe8ef;
+    }
+    .chat-map-wrap { max-width: 88%; }
+    .waze-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0.25rem 0 0.4rem;
+      max-width: 88%;
+    }
+    .waze-btns a {
+      display: inline-block;
+      background: #33ccff;
+      color: #003344 !important;
+      text-decoration: none !important;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid #1aa3cc;
+    }
+    .waze-btns a.osm {
+      background: #fff;
+      color: #1a3a5c !important;
+      border-color: #c5d0da;
+    }
     .agent-title {
       font-size: 0.78rem;
       font-weight: 600;
@@ -823,6 +859,43 @@
       } catch (e) {}
     }
 
+    
+    var mapSeq = 0;
+    function renderChatMap(col, mapData) {
+      if (!mapData || !window.L) return;
+      var lat = Number(mapData.lat);
+      var lon = Number(mapData.lon);
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-map-wrap';
+      var id = 'chat-map-' + (++mapSeq);
+      var div = document.createElement('div');
+      div.id = id;
+      div.className = 'chat-map';
+      wrap.appendChild(div);
+      col.appendChild(wrap);
+      setTimeout(function () {
+        try {
+          var zoom = mapData.zoom || 13;
+          var map = L.map(id, { scrollWheelZoom: false, attributionControl: true });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap',
+          }).addTo(map);
+          map.setView([lat, lon], zoom);
+          var markers = mapData.markers || [{ lat: lat, lon: lon, label: mapData.title || '' }];
+          markers.forEach(function (m) {
+            var mk = L.marker([m.lat, m.lon]).addTo(map);
+            var txt = (m.label || '') + (m.note ? '<br/><small>' + m.note + '</small>' : '');
+            if (txt) mk.bindPopup(txt);
+          });
+          setTimeout(function () { map.invalidateSize(); }, 200);
+        } catch (e) {
+          console.warn('map', e);
+        }
+      }, 50);
+    }
+
     function botBubble(data) {
       if (data && data.reply) {
         lastBotText = data.reply;
@@ -928,6 +1001,29 @@
         linkifyBubble(bub, replyText);
       }
       col.appendChild(bub);
+      if (data && data.map) {
+        try { renderChatMap(col, data.map); } catch (e) {}
+      }
+      if (data && data.links && data.links.length) {
+        var wazeBox = document.createElement('div');
+        wazeBox.className = 'waze-btns';
+        var hasWaze = false;
+        data.links.forEach(function (L) {
+          var u = String((L && L.u) || '');
+          var isWaze = (L && L.kind === 'waze') || /waze\.com/i.test(u);
+          var isOsm = (L && L.kind === 'osm') || /openstreetmap\.org/i.test(u);
+          if (!isWaze && !isOsm) return;
+          hasWaze = true;
+          var a = document.createElement('a');
+          a.href = u;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = L.t || (isWaze ? 'Waze' : 'OpenStreetMap');
+          if (isOsm) a.className = 'osm';
+          wazeBox.appendChild(a);
+        });
+        if (hasWaze) col.appendChild(wazeBox);
+      }
       try { appendUrlButtons(col, replyText); } catch (e) {}
       if (!musicLayout && data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
@@ -951,7 +1047,7 @@
         });
         if (mlist.childNodes.length) col.appendChild(mlist);
       }
-      if (!musicLayout && data && data.links && data.links.length && !(data.tracks && data.tracks.length)) {
+      if (!musicLayout && data && data.links && data.links.length && !(data.tracks && data.tracks.length) && !data.map) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
           if (isAudioLink(L.u) && /\.mp3(\?|$)/i.test(String(L.u))) {
