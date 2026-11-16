@@ -105,6 +105,47 @@
     }
     .msg.user .bubble { background: var(--user); border-bottom-right-radius: 0.25rem; }
     .msg.bot .bubble { background: var(--bot); border-bottom-left-radius: 0.25rem; }
+    .bubble { white-space: pre-wrap; }
+    .bubble .fmt { white-space: normal; }
+    .bubble strong { font-weight: 600; color: #1a3038; }
+    .bubble em { font-style: italic; }
+    .bubble-table-wrap {
+      overflow-x: auto;
+      margin: 0.55rem 0;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: #fff;
+      -webkit-overflow-scrolling: touch;
+    }
+    .bubble-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+    .bubble-table th {
+      background: #e8eef3;
+      text-align: left;
+      padding: 0.4rem 0.5rem;
+      font-weight: 600;
+      color: #1a3a5c;
+      border-bottom: 1px solid #cfd8e0;
+    }
+    .bubble-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid #eef1f4;
+      vertical-align: top;
+      color: #24313a;
+    }
+    .bubble-table tr:last-child td { border-bottom: none; }
+    .bubble-table tr:nth-child(even) td { background: #f7fafc; }
+    .agent-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #5a6a75;
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.02em;
+    }
     .bubble a, .bubble a:visited {
       color: #1565c0 !important;
       text-decoration: underline;
@@ -481,6 +522,92 @@
     updateCharGhost();
 
 
+    
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+    function stripDupTitle(text) {
+      var t = String(text || '');
+      t = t.replace(/^(✨\s*)?\*{0,2}Urvashi Apsara Vimana\*{0,2}\s*/i, '');
+      t = t.replace(/^(✨\s*)?\*{0,2}Urvashi Apsara Vimana\*{0,2}\s*/i, '');
+      return t.trim();
+    }
+    function formatInline(s) {
+      var t = escapeHtml(s);
+      t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      t = t.replace(/`([^`]+)`/g, '<code style="font-size:0.85em;background:#eef2f5;padding:0 0.25em;border-radius:3px;">$1</code>');
+      // links
+      t = t.replace(/(https?:\/\/[^\s<&]+)/g, function (u) {
+        var clean = u.replace(/[)\],.;:!?]+$/g, '');
+        var trail = u.slice(clean.length);
+        return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + clean + '</a>' + trail;
+      });
+      return t;
+    }
+    function isTableSep(line) {
+      return /^\s*\|?[\s-:|]+\|[\s-:|]*\|?\s*$/.test(line) && /---/.test(line);
+    }
+    function parseTableBlock(lines, start) {
+      var rows = [];
+      var i = start;
+      while (i < lines.length && lines[i].indexOf('|') >= 0) {
+        if (isTableSep(lines[i])) { i++; continue; }
+        var cells = lines[i].split('|').map(function (c) { return c.trim(); });
+        if (cells[0] === '') cells.shift();
+        if (cells.length && cells[cells.length - 1] === '') cells.pop();
+        if (cells.length) rows.push(cells);
+        i++;
+      }
+      if (rows.length < 2) return null;
+      return { rows: rows, end: i };
+    }
+    function formatBotHtml(text) {
+      var raw = stripDupTitle(text);
+      var lines = raw.split(/\n/);
+      var html = '';
+      var i = 0;
+      var titleOnce = false;
+      while (i < lines.length) {
+        var line = lines[i];
+        if (/^\s*✨?\s*Urvashi Apsara Vimana\s*$/i.test(line.trim()) || /^\s*✨\s*$/.test(line.trim())) {
+          if (!titleOnce) {
+            html += '<div class="agent-title">✨ Urvashi Apsara Vimana</div>';
+            titleOnce = true;
+          }
+          i++;
+          continue;
+        }
+        if (line.indexOf('|') >= 0 && i + 1 < lines.length && (isTableSep(lines[i + 1]) || lines[i + 1].indexOf('|') >= 0)) {
+          var tb = parseTableBlock(lines, i);
+          if (tb && tb.rows.length) {
+            html += '<div class="bubble-table-wrap"><table class="bubble-table"><thead><tr>';
+            tb.rows[0].forEach(function (c) { html += '<th>' + formatInline(c) + '</th>'; });
+            html += '</tr></thead><tbody>';
+            for (var r = 1; r < tb.rows.length; r++) {
+              html += '<tr>';
+              tb.rows[r].forEach(function (c) { html += '<td>' + formatInline(c) + '</td>'; });
+              html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+            i = tb.end;
+            continue;
+          }
+        }
+        if (line.trim() === '') {
+          html += '<br/>';
+          i++;
+          continue;
+        }
+        html += '<div class="fmt-line">' + formatInline(line) + '</div>';
+        i++;
+      }
+      return html || formatInline(raw);
+    }
+
     function cleanUrl(u) {
       var s = String(u || '');
       while (s.length && ')].,;:!?»"\''.indexOf(s.charAt(s.length - 1)) >= 0) {
@@ -795,7 +922,11 @@
 
       var bub = el('div', 'bubble');
       var replyText = (data && data.reply) || '…';
-      linkifyBubble(bub, replyText);
+      try {
+        bub.innerHTML = formatBotHtml(replyText);
+      } catch (err) {
+        linkifyBubble(bub, replyText);
+      }
       col.appendChild(bub);
       try { appendUrlButtons(col, replyText); } catch (e) {}
       if (!musicLayout && data && data.media && data.media.length) {
