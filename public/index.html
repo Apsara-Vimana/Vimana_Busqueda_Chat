@@ -872,14 +872,46 @@
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
       } catch (e) {}
     }
-    function downloadExcelDoc(text, name) {
+        function downloadExcelDoc(text, name) {
       try {
         var body = String(text || lastBotText || '').trim();
         if (!body) return;
-        var rows = body.split(/\n/).map(function (line) {
-          var cell = '"' + String(line).replace(/"/g, '""') + '"';
-          return cell;
+        var lines = body.split(/\n/);
+        var rows = ['"N°","Título / sección","Detalle"'];
+        var n = 0;
+        var title = '';
+        var buf = [];
+        function flush() {
+          if (!title && !buf.length) return;
+          n++;
+          var det = buf.join(' ').replace(/\s+/g, ' ').trim();
+          rows.push(
+            '"' + n + '","' + String(title || 'Ítem ' + n).replace(/"/g, '""') + '","' + det.replace(/"/g, '""') + '"'
+          );
+          title = '';
+          buf = [];
+        }
+        lines.forEach(function (line) {
+          var m = line.match(/^\s*(\d+)[\.\)\-]\s*(.+)$/);
+          if (m) {
+            flush();
+            title = m[2].trim();
+            return;
+          }
+          if (/^\s*#{1,3}\s+/.test(line) || /^\s*\*\*[^*]+\*\*\s*$/.test(line)) {
+            flush();
+            title = line.replace(/^\s*#{1,3}\s+/, '').replace(/\*\*/g, '').trim();
+            return;
+          }
+          if (line.trim()) buf.push(line.trim());
         });
+        flush();
+        if (rows.length < 2) {
+          rows = ['"Línea","Texto"'];
+          lines.forEach(function (line, i) {
+            if (line.trim()) rows.push('"' + (i + 1) + '","' + line.replace(/"/g, '""') + '"');
+          });
+        }
         var csv = '\ufeff' + rows.join('\n');
         var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
         var a = document.createElement('a');
@@ -890,6 +922,7 @@
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
       } catch (e) {}
     }
+
     function downloadPptDoc(text, name) {
       try {
         var body = String(text || lastBotText || '').trim();
@@ -1222,50 +1255,79 @@
       message.style.height = 'auto';
 
       var qn = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (/^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) || qn === 'word' || /guarda en word/.test(qn)) {
-        if (lastBotText) {
+
+      // —— Descargas del último mensaje de Apsara (cliente; no pasar por la IA) ——
+      function doDownload(fmt) {
+        if (!lastBotText || !String(lastBotText).trim()) {
+          botBubble({ reply: 'Aún no hay texto de Apsara para guardar. Pide primero el contenido (ej. 5 recetas) y luego la descarga.', options: ['ayuda'] });
+          return;
+        }
+        if (fmt === 'word') {
           downloadWordDoc(lastBotText, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: archivo Word (.doc) con el último mensaje.', options: ['descargar txt', 'descargar excel', 'ayuda'] });
-        } else {
-          botBubble({ reply: 'Aún no hay texto para guardar. Pregunta algo y luego: descargar word.', options: ['ayuda'] });
-        }
-        return;
-      }
-      if (/^(descargar|descarga|exportar)\s+(en\s+)?(txt|texto)\b/.test(qn) || qn === 'txt' || /guarda en txt|descargar texto/.test(qn)) {
-        if (lastBotText) {
+          botBubble({ reply: 'Listo: se descargó el archivo Word (.doc) con el contenido de la pantalla.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'txt') {
           downloadTxtDoc(lastBotText, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: archivo de texto (.txt).', options: ['descargar word', 'descargar excel', 'ayuda'] });
-        } else {
-          botBubble({ reply: 'No hay texto aún. Escribe *descargar txt* después de una respuesta.', options: ['ayuda'] });
-        }
-        return;
-      }
-      if (/^(descargar|descarga|exportar)\s+(en\s+)?(excel|csv)\b/.test(qn) || qn === 'excel' || /guarda en excel/.test(qn)) {
-        if (lastBotText) {
+          botBubble({ reply: 'Listo: archivo de texto (.txt) descargado.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'excel') {
           downloadExcelDoc(lastBotText, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: archivo Excel/CSV (.csv) — ábrelo con Excel o LibreOffice.', options: ['descargar word', 'descargar txt', 'ayuda'] });
-        } else {
-          botBubble({ reply: 'No hay texto aún. Luego escribe *descargar excel*.', options: ['ayuda'] });
-        }
-        return;
-      }
-      if (/^(descargar|descarga|exportar)\s+(en\s+)?(powerpoint|power point|ppt)\b/.test(qn) || qn === 'powerpoint' || /guarda en powerpoint|descargar ppt/.test(qn)) {
-        if (lastBotText) {
+          botBubble({ reply: 'Listo: archivo Excel/CSV (.csv) descargado. Ábrelo con Excel o LibreOffice.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'ppt') {
           downloadPptDoc(lastBotText, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: presentación (.ppt) generada a partir del texto. Ábrela con PowerPoint o LibreOffice Impress.', options: ['descargar word', 'descargar excel', 'ayuda'] });
-        } else {
-          botBubble({ reply: 'No hay texto aún. Luego escribe *descargar powerpoint*.', options: ['ayuda'] });
+          botBubble({ reply: 'Listo: presentación (.ppt) descargada.', options: ['ayuda', 'limpiar'] });
         }
+      }
+      // Formato explícito en la frase → descarga directa (sin preguntar)
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|pasame|pásame|dame).{0,40}(word|docx|\.doc\b)/.test(qn) ||
+        /(word|docx).{0,40}(descarga|descargar|archivo|exportar)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) ||
+        qn === 'word' ||
+        /guarda en word/.test(qn)
+      ) {
+        doDownload('word');
         return;
       }
-      if (/dame la descarga|descarga el chat|exportar chat/.test(qn)) {
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|dame).{0,40}(excel|csv|hoja de calculo|hoja de cálculo)/.test(qn) ||
+        /(excel|csv).{0,40}(descarga|descargar|archivo|tabla)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(excel|csv)\b/.test(qn) ||
+        qn === 'excel' ||
+        /guarda en excel/.test(qn)
+      ) {
+        doDownload('excel');
+        return;
+      }
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|dame).{0,40}(\btxt\b|texto plano|archivo de texto)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(txt|texto)\b/.test(qn) ||
+        qn === 'txt' ||
+        /guarda en txt/.test(qn)
+      ) {
+        doDownload('txt');
+        return;
+      }
+      if (
+        /(descargar|descarga|exportar|copia|copiar).{0,40}(powerpoint|power point|\bppt\b)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(powerpoint|power point|ppt)\b/.test(qn) ||
+        qn === 'powerpoint' ||
+        /guarda en powerpoint/.test(qn)
+      ) {
+        doDownload('ppt');
+        return;
+      }
+      // Solo si pide descarga SIN formato → entonces preguntar
+      if (
+        /^(dame la descarga|descarga el chat|exportar chat|descargar|descarga|exportar)$/.test(qn.trim()) ||
+        (/dame la descarga|quiero la descarga|exportar (el )?chat/.test(qn) &&
+          !/(word|excel|csv|txt|ppt|powerpoint)/.test(qn))
+      ) {
         if (lastBotText) {
           botBubble({
             reply: '¿En qué formato quieres la descarga?',
             options: ['descargar word', 'descargar txt', 'descargar excel', 'descargar powerpoint', 'ayuda'],
           });
         } else {
-          botBubble({ reply: 'Aún no hay mensaje para exportar.', options: ['ayuda'] });
+          botBubble({ reply: 'Aún no hay mensaje para exportar. Genera el contenido y luego pide la descarga.', options: ['ayuda'] });
         }
         return;
       }
