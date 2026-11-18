@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#B0B8BF" />
   <title>Apsara Vimana — asistente</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <meta name="description" content="Conversa con Apsara sobre música, arte y sabiduría." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -105,6 +107,111 @@
     }
     .msg.user .bubble { background: var(--user); border-bottom-right-radius: 0.25rem; }
     .msg.bot .bubble { background: var(--bot); border-bottom-left-radius: 0.25rem; }
+    .bubble { white-space: pre-wrap; }
+    .bubble .fmt { white-space: normal; }
+    .bubble strong { font-weight: 600; color: #1a3038; }
+    .bubble em { font-style: italic; }
+    .bubble-table-wrap {
+      overflow-x: auto;
+      margin: 0.55rem 0;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: #fff;
+      -webkit-overflow-scrolling: touch;
+    }
+    .bubble-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+    .bubble-table th {
+      background: #e8eef3;
+      text-align: left;
+      padding: 0.4rem 0.5rem;
+      font-weight: 600;
+      color: #1a3a5c;
+      border-bottom: 1px solid #cfd8e0;
+    }
+    .bubble-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid #eef1f4;
+      vertical-align: top;
+      color: #24313a;
+    }
+    .bubble-table tr:last-child td { border-bottom: none; }
+    .bubble-table tr:nth-child(even) td { background: #f7fafc; }
+    .chat-map {
+      width: 100%;
+      max-width: 340px;
+      height: 220px;
+      border-radius: 12px;
+      margin: 0.35rem 0 0.5rem;
+      border: 1px solid rgba(0,0,0,0.1);
+      z-index: 1;
+      background: #dfe8ef;
+    }
+    .chat-map-wrap { max-width: 88%; }
+    .waze-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0.25rem 0 0.4rem;
+      max-width: 88%;
+    }
+    .waze-btns a {
+      display: inline-block;
+      background: #33ccff;
+      color: #003344 !important;
+      text-decoration: none !important;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid #1aa3cc;
+    }
+    .waze-btns a.osm {
+      background: #fff;
+      color: #1a3a5c !important;
+      border-color: #c5d0da;
+    }
+    .agent-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #5a6a75;
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.02em;
+    }
+    .bubble a, .bubble a:visited {
+      color: #1565c0 !important;
+      text-decoration: underline;
+      pointer-events: auto !important;
+      cursor: pointer;
+      word-break: break-all;
+      font-weight: 500;
+    }
+    .bubble a:hover { color: #0d47a1 !important; }
+    .yt-links {
+      margin: 0.4rem 0 0.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 88%;
+    }
+    .yt-links a {
+      display: block;
+      background: #fff;
+      color: #1565c0 !important;
+      text-decoration: underline;
+      border-radius: 0.65rem;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #90caf9;
+      font-size: 0.8rem;
+      font-weight: 600;
+      word-break: break-all;
+      pointer-events: auto;
+      cursor: pointer;
+    }
     .links { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
     .link-card {
       display: block; text-decoration: none; color: #1a3a5c;
@@ -270,7 +377,7 @@
       <form id="composer" autocomplete="off">
         <span class="char-ghost" id="charGhost" aria-hidden="true"></span>
         <textarea id="message" rows="1" maxlength="600" placeholder="Escribe tu mensaje..." enterkeyhint="send"></textarea>
-        <button type="button" id="micBtn" title="Hablar con Apsara" aria-label="Micrófono">🎤</button>
+        
         <button type="button" id="voiceToggle" title="Voz de Apsara on/off" aria-label="Voz">🔇</button>
         <button type="submit" id="send" aria-label="Enviar" disabled>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -298,14 +405,50 @@
   <script>
   (function () {
     var API = '/api/chat';
+    function __renderJamendoTracks(tracks) {
+      var trackBox = document.createElement('div');
+      trackBox.className = 'jamendo-tracks';
+      trackBox.style.cssText = 'margin:8px 12px;display:flex;flex-direction:column;gap:8px;';
+      (tracks || []).forEach(function (t) {
+        var card = document.createElement('div');
+        card.style.cssText = 'background:rgba(255,255,255,0.12);border-radius:10px;padding:8px;';
+        card.innerHTML = '<div style="font-weight:600;font-size:13px;margin-bottom:4px;">' +
+          (t.name || 'Pista') + ' <span style="font-weight:400;opacity:0.8;">· ' + (t.artist || '') + '</span></div>';
+        var audio = document.createElement('audio');
+        audio.controls = true;
+        audio.preload = 'none';
+        audio.src = t.audio || '';
+        audio.style.width = '100%';
+        audio.style.height = '36px';
+        card.appendChild(audio);
+        trackBox.appendChild(card);
+      });
+      conversation.appendChild(trackBox);
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+    window.__renderJamendoTracks = __renderJamendoTracks;
+    function collectHistory() {
+      var nodes = conversation.querySelectorAll('.msg');
+      var hist = [];
+      for (var i = 0; i < nodes.length; i++) {
+        var el = nodes[i];
+        var role = el.classList.contains('user') ? 'user' : 'assistant';
+        var textEl = el.querySelector('.bubble') || el;
+        var text = (textEl.innerText || textEl.textContent || '').trim();
+        if (!text || text.length < 2) continue;
+        hist.push({ role: role, content: text.slice(0, 900) });
+      }
+      // últimos 8 turnos (sin el mensaje actual aún no enviado)
+      return hist.slice(-8);
+    }
+
     var conversation = document.getElementById('conversation');
     var form = document.getElementById('composer');
     var message = document.getElementById('message');
     var sendBtn = document.getElementById('send');
-    var micBtn = document.getElementById('micBtn');
+    var micBtn = null;
     var voiceToggle = document.getElementById('voiceToggle');
-    if (micBtn) micBtn.addEventListener('click', function () { voiceOn = true; if (voiceToggle) voiceToggle.textContent = '🔊'; startMic(); });
-    if (voiceToggle) voiceToggle.addEventListener('click', function () {
+        if (voiceToggle) voiceToggle.addEventListener('click', function () {
       voiceOn = !voiceOn;
       voiceToggle.textContent = voiceOn ? '🔊' : '🔇';
       if (!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel();
@@ -415,6 +558,176 @@
     updateCharGhost();
 
 
+    
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+    function stripDupTitle(text) {
+      var t = String(text || '');
+      t = t.replace(/^(✨\s*)?\*{0,2}Urvashi Apsara Vimana\*{0,2}\s*/i, '');
+      t = t.replace(/^(✨\s*)?\*{0,2}Urvashi Apsara Vimana\*{0,2}\s*/i, '');
+      return t.trim();
+    }
+    function formatInline(s) {
+      var t = escapeHtml(s);
+      t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      t = t.replace(/`([^`]+)`/g, '<code style="font-size:0.85em;background:#eef2f5;padding:0 0.25em;border-radius:3px;">$1</code>');
+      // links
+      t = t.replace(/(https?:\/\/[^\s<&]+)/g, function (u) {
+        var clean = u.replace(/[)\],.;:!?]+$/g, '');
+        var trail = u.slice(clean.length);
+        return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + clean + '</a>' + trail;
+      });
+      return t;
+    }
+    function isTableSep(line) {
+      return /^\s*\|?[\s-:|]+\|[\s-:|]*\|?\s*$/.test(line) && /---/.test(line);
+    }
+    function parseTableBlock(lines, start) {
+      var rows = [];
+      var i = start;
+      while (i < lines.length && lines[i].indexOf('|') >= 0) {
+        if (isTableSep(lines[i])) { i++; continue; }
+        var cells = lines[i].split('|').map(function (c) { return c.trim(); });
+        if (cells[0] === '') cells.shift();
+        if (cells.length && cells[cells.length - 1] === '') cells.pop();
+        if (cells.length) rows.push(cells);
+        i++;
+      }
+      if (rows.length < 2) return null;
+      return { rows: rows, end: i };
+    }
+    function formatBotHtml(text) {
+      var raw = stripDupTitle(text);
+      var lines = raw.split(/\n/);
+      var html = '';
+      var i = 0;
+      var titleOnce = false;
+      while (i < lines.length) {
+        var line = lines[i];
+        if (/^\s*✨?\s*Urvashi Apsara Vimana\s*$/i.test(line.trim()) || /^\s*✨\s*$/.test(line.trim())) {
+          if (!titleOnce) {
+            html += '<div class="agent-title">✨ Urvashi Apsara Vimana</div>';
+            titleOnce = true;
+          }
+          i++;
+          continue;
+        }
+        if (line.indexOf('|') >= 0 && i + 1 < lines.length && (isTableSep(lines[i + 1]) || lines[i + 1].indexOf('|') >= 0)) {
+          var tb = parseTableBlock(lines, i);
+          if (tb && tb.rows.length) {
+            html += '<div class="bubble-table-wrap"><table class="bubble-table"><thead><tr>';
+            tb.rows[0].forEach(function (c) { html += '<th>' + formatInline(c) + '</th>'; });
+            html += '</tr></thead><tbody>';
+            for (var r = 1; r < tb.rows.length; r++) {
+              html += '<tr>';
+              tb.rows[r].forEach(function (c) { html += '<td>' + formatInline(c) + '</td>'; });
+              html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+            i = tb.end;
+            continue;
+          }
+        }
+        if (line.trim() === '') {
+          html += '<br/>';
+          i++;
+          continue;
+        }
+        html += '<div class="fmt-line">' + formatInline(line) + '</div>';
+        i++;
+      }
+      return html || formatInline(raw);
+    }
+
+    function cleanUrl(u) {
+      var s = String(u || '');
+      while (s.length && ')].,;:!?»"\''.indexOf(s.charAt(s.length - 1)) >= 0) {
+        s = s.slice(0, -1);
+      }
+      return s;
+    }
+    var BAD_YT_IDS = {
+      'jgpJVI3tDbA': 1,
+      '0LWvJQ7RMx4': 1,
+      'MnYq4zY5W5M': 1,
+      'WNCSUNKlNqU': 1,
+      '5CXa10wT1Yg': 1,
+      'kYQw7yXk5Y8': 1,
+      'rOjHhS5MtvA': 1
+    };
+    function isBadYoutubeUrl(u) {
+      var m = String(u || '').match(/[?&]v=([\w-]{6,})/) || String(u || '').match(/youtu\.be\/([\w-]{6,})/);
+      if (!m) return false;
+      return !!BAD_YT_IDS[m[1]];
+    }
+    function extractHttpUrls(text) {
+      var raw = String(text || '');
+      var re = /https?:\/\/[^\s<>\]"']+/gi;
+      var out = [];
+      var m;
+      while ((m = re.exec(raw)) !== null) {
+        var u = cleanUrl(m[0]);
+        if (u && out.indexOf(u) < 0 && !isBadYoutubeUrl(u)) out.push(u);
+      }
+      return out;
+    }
+    function linkifyBubble(elBubble, text) {
+      var raw = String(text || '');
+      elBubble.textContent = '';
+      var re = /https?:\/\/[^\s<>\]"']+/gi;
+      var last = 0;
+      var m;
+      while ((m = re.exec(raw)) !== null) {
+        if (m.index > last) {
+          elBubble.appendChild(document.createTextNode(raw.slice(last, m.index)));
+        }
+        var href = cleanUrl(m[0]);
+        if (isBadYoutubeUrl(href)) {
+          elBubble.appendChild(document.createTextNode('(enlace no disponible · busca el título en YouTube)'));
+        } else {
+          var a = document.createElement('a');
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = href;
+          a.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+          });
+          elBubble.appendChild(a);
+        }
+        last = m.index + m[0].length;
+      }
+      if (last < raw.length) elBubble.appendChild(document.createTextNode(raw.slice(last)));
+    }
+    function appendUrlButtons(col, text) {
+      var urls = extractHttpUrls(text).filter(function (u) {
+        return !/jamendo\.com/i.test(u);
+      });
+      if (!urls.length) return;
+      var box = document.createElement('div');
+      box.className = 'yt-links';
+      urls.forEach(function (u, i) {
+        var a = document.createElement('a');
+        a.href = u;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        var label = u;
+        if (/youtube\.com|youtu\.be/i.test(u)) label = '▶ Abrir en YouTube';
+        else if (/spotify\.com/i.test(u)) label = '▶ Abrir en Spotify';
+        else if (/vimana\.rf\.gd/i.test(u)) label = '▶ Abrir en Vimana';
+        else label = '▶ Abrir enlace';
+        if (urls.length > 1) label = (i + 1) + '. ' + label;
+        a.textContent = label;
+        a.title = u;
+        box.appendChild(a);
+      });
+      col.appendChild(box);
+    }
     function el(tag, cls, text) {
       var e = document.createElement(tag);
       if (cls) e.className = cls;
@@ -472,48 +785,54 @@
 
     // —— Voz del navegador (gratis, sin servidor) ——
     var voiceOn = false;
-    function speakText(text) {
+        function speakText(text) {
       try {
-        if (!voiceOn || !window.speechSynthesis) return;
+        if (!voiceOn) return;
+        if (!window.speechSynthesis) {
+          console.warn('speechSynthesis no disponible');
+          return;
+        }
         var clean = String(text || '')
           .replace(/\*\*/g, '')
           .replace(/[_`#]/g, '')
           .replace(/https?:\/\/\S+/g, '')
           .replace(/\n+/g, '. ')
           .trim();
-        if (!clean) return;
+        if (!clean || clean.length < 2) return;
         window.speechSynthesis.cancel();
-        var u = new SpeechSynthesisUtterance(clean.slice(0, 1200));
+        var u = new SpeechSynthesisUtterance(clean.slice(0, 800));
         u.lang = 'es-ES';
-        u.rate = 0.95;
-        var voices = window.speechSynthesis.getVoices() || [];
-        var es = voices.find(function (v) { return /es-ES|es_MX|Spanish/i.test(v.lang + v.name); });
-        if (es) u.voice = es;
-        window.speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-    function startMic() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        botBubble({ reply: 'Tu navegador no admite dictado por micrófono. Prueba Chrome o Edge.', options: ['ayuda'] });
-        return;
-      }
-      var rec = new SR();
-      rec.lang = 'es-ES';
-      rec.interimResults = false;
-      rec.maxAlternatives = 1;
-      rec.onresult = function (ev) {
-        var t = ev.results[0][0].transcript;
-        if (t) {
-          input.value = t;
-          enviar();
+        u.rate = 1;
+        u.pitch = 1;
+        var pickVoice = function () {
+          var voices = window.speechSynthesis.getVoices() || [];
+          var es = voices.filter(function (v) {
+            return (v.lang || '').toLowerCase().indexOf('es') === 0;
+          });
+          if (es.length) u.voice = es[0];
+          window.speechSynthesis.speak(u);
+        };
+        var voices = window.speechSynthesis.getVoices();
+        if (!voices || !voices.length) {
+          window.speechSynthesis.onvoiceschanged = function () {
+            window.speechSynthesis.onvoiceschanged = null;
+            pickVoice();
+          };
+          // algunos navegadores cargan voces con retraso
+          setTimeout(pickVoice, 250);
+        } else {
+          pickVoice();
         }
-      };
-      rec.onerror = function () {
-        botBubble({ reply: 'No escuché bien. Pulsa el micrófono e inténtalo de nuevo.', options: ['ayuda'] });
-      };
-      rec.start();
+      } catch (e) {
+        console.warn('voz', e);
+      }
     }
+
+
+        function startMic() {
+      /* micrófono desactivado a petición */
+    }
+
 
     function downloadWordDoc(text, name) {
       try {
@@ -538,6 +857,139 @@
           a.remove();
         }, 800);
       } catch (e) {}
+    }
+
+    function downloadTxtDoc(text, name) {
+      try {
+        var body = String(text || lastBotText || '').trim();
+        if (!body) return;
+        var blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (name || 'apsara-vimana') + '.txt';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+      } catch (e) {}
+    }
+        function downloadExcelDoc(text, name) {
+      try {
+        var body = String(text || lastBotText || '').trim();
+        if (!body) return;
+        var lines = body.split(/\n/);
+        var rows = ['"N°","Título / sección","Detalle"'];
+        var n = 0;
+        var title = '';
+        var buf = [];
+        function flush() {
+          if (!title && !buf.length) return;
+          n++;
+          var det = buf.join(' ').replace(/\s+/g, ' ').trim();
+          rows.push(
+            '"' + n + '","' + String(title || 'Ítem ' + n).replace(/"/g, '""') + '","' + det.replace(/"/g, '""') + '"'
+          );
+          title = '';
+          buf = [];
+        }
+        lines.forEach(function (line) {
+          var m = line.match(/^\s*(\d+)[\.\)\-]\s*(.+)$/);
+          if (m) {
+            flush();
+            title = m[2].trim();
+            return;
+          }
+          if (/^\s*#{1,3}\s+/.test(line) || /^\s*\*\*[^*]+\*\*\s*$/.test(line)) {
+            flush();
+            title = line.replace(/^\s*#{1,3}\s+/, '').replace(/\*\*/g, '').trim();
+            return;
+          }
+          if (line.trim()) buf.push(line.trim());
+        });
+        flush();
+        if (rows.length < 2) {
+          rows = ['"Línea","Texto"'];
+          lines.forEach(function (line, i) {
+            if (line.trim()) rows.push('"' + (i + 1) + '","' + line.replace(/"/g, '""') + '"');
+          });
+        }
+        var csv = '\ufeff' + rows.join('\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (name || 'apsara-vimana') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+      } catch (e) {}
+    }
+
+    function downloadPptDoc(text, name) {
+      try {
+        var body = String(text || lastBotText || '').trim();
+        if (!body) return;
+        var slides = body.split(/\n\n+/).filter(Boolean).slice(0, 12);
+        if (!slides.length) slides = [body.slice(0, 800)];
+        var parts = slides.map(function (s, i) {
+          return (
+            '<div class="slide" style="page-break-after:always;padding:48px;font-family:Georgia,serif;min-height:70vh;box-sizing:border-box;">' +
+            '<h2 style="color:#1a3a5c;">Apsara Vimana — ' + (i + 1) + '</h2>' +
+            '<p style="font-size:18px;line-height:1.5;white-space:pre-wrap;">' +
+            String(s)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;') +
+            '</p></div>'
+          );
+        });
+        var html =
+          '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Apsara Vimana</title></head><body>' +
+          parts.join('') +
+          '</body></html>';
+        var blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-powerpoint' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (name || 'apsara-vimana') + '.ppt';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+      } catch (e) {}
+    }
+
+    
+    var mapSeq = 0;
+    function renderChatMap(col, mapData) {
+      if (!mapData || !window.L) return;
+      var lat = Number(mapData.lat);
+      var lon = Number(mapData.lon);
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-map-wrap';
+      var id = 'chat-map-' + (++mapSeq);
+      var div = document.createElement('div');
+      div.id = id;
+      div.className = 'chat-map';
+      wrap.appendChild(div);
+      col.appendChild(wrap);
+      setTimeout(function () {
+        try {
+          var zoom = mapData.zoom || 13;
+          var map = L.map(id, { scrollWheelZoom: false, attributionControl: true });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap',
+          }).addTo(map);
+          map.setView([lat, lon], zoom);
+          var markers = mapData.markers || [{ lat: lat, lon: lon, label: mapData.title || '' }];
+          markers.forEach(function (m) {
+            var mk = L.marker([m.lat, m.lon]).addTo(map);
+            var txt = (m.label || '') + (m.note ? '<br/><small>' + m.note + '</small>' : '');
+            if (txt) mk.bindPopup(txt);
+          });
+          setTimeout(function () { map.invalidateSize(); }, 200);
+        } catch (e) {
+          console.warn('map', e);
+        }
+      }, 50);
     }
 
     function botBubble(data) {
@@ -580,8 +1032,96 @@
         wrap.appendChild(big);
         col.appendChild(wrap);
       }
-      col.appendChild(el('div', 'bubble', (data && data.reply) || '…'));
-      if (data && data.media && data.media.length) {
+      // Reproductores arriba (orden: pistas → texto)
+      if (data && data.tracks && data.tracks.length) {
+        var trackBox = document.createElement('div');
+        trackBox.className = 'vimana-tracks';
+        trackBox.style.cssText = 'margin:0 0 10px;display:flex;flex-direction:column;gap:8px;max-width:min(100%,340px);';
+        data.tracks.forEach(function (t) {
+          var card = document.createElement('div');
+          card.style.cssText = 'background:rgba(255,255,255,0.55);border-radius:12px;padding:8px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);';
+          var title = document.createElement('div');
+          title.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:4px;line-height:1.3;';
+          title.textContent = (t.name || 'Pista') + (t.artist ? ' · ' + t.artist : '');
+          var audio = document.createElement('audio');
+          audio.controls = true;
+          audio.preload = 'none';
+          audio.src = t.audio || '';
+          audio.style.cssText = 'width:100%;height:36px;';
+          card.appendChild(title);
+          card.appendChild(audio);
+          trackBox.appendChild(card);
+        });
+        col.appendChild(trackBox);
+      }
+
+      var musicLayout =
+        (data && data.tracks && data.tracks.length) ||
+        (data && data.links && data.links.some(function (L) {
+          return /vimana\.rf\.gd/i.test(String((L && L.u) || ''));
+        }));
+      // Radios / media arriba en layout musical
+      if (musicLayout && data && data.media && data.media.length) {
+        var mlistTop = el('div', 'media-list');
+        data.media.forEach(function (M) {
+          var b = el('button', 'chip media-chip');
+          b.type = 'button';
+          b.appendChild(el('span', 'ico', '📻'));
+          b.appendChild(document.createTextNode(M.t || 'Radio'));
+          b.addEventListener('click', function () {
+            if (M.u) playRadioInChat(M.u, M.t);
+          });
+          mlistTop.appendChild(b);
+        });
+        if (mlistTop.childNodes.length) col.appendChild(mlistTop);
+      }
+      if (musicLayout && data && data.links && data.links.length) {
+        var listTop = el('div', 'links');
+        data.links.forEach(function (L) {
+          var a = document.createElement('a');
+          a.className = 'link-card';
+          a.href = L.u || '#';
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.appendChild(el('span', 'link-title', L.t || 'Abrir'));
+          listTop.appendChild(a);
+        });
+        col.appendChild(listTop);
+      }
+
+      var bub = el('div', 'bubble');
+      var replyText = (data && data.reply) || '…';
+      try {
+        bub.innerHTML = formatBotHtml(replyText);
+      } catch (err) {
+        linkifyBubble(bub, replyText);
+      }
+      col.appendChild(bub);
+      if (data && data.map) {
+        try { renderChatMap(col, data.map); } catch (e) {}
+      }
+      if (data && data.links && data.links.length) {
+        var wazeBox = document.createElement('div');
+        wazeBox.className = 'waze-btns';
+        var hasWaze = false;
+        data.links.forEach(function (L) {
+          var u = String((L && L.u) || '');
+          var isWaze = (L && L.kind === 'waze') || /waze\.com/i.test(u);
+          var isOsm = (L && L.kind === 'osm') || /openstreetmap\.org/i.test(u);
+          if (!isWaze && !isOsm) return;
+          hasWaze = true;
+          var a = document.createElement('a');
+          a.href = u;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = L.t || (isWaze ? 'Waze' : 'OpenStreetMap');
+          if (isOsm) a.className = 'osm';
+          wazeBox.appendChild(a);
+        });
+        if (hasWaze) col.appendChild(wazeBox);
+      }
+      try { appendUrlButtons(col, replyText); } catch (e) {}
+      if (!musicLayout && data && data.media && data.media.length) {
         var mlist = el('div', 'media-list');
         data.media.forEach(function (M) {
           var u = String(M.u || '');
@@ -603,7 +1143,7 @@
         });
         if (mlist.childNodes.length) col.appendChild(mlist);
       }
-      if (data && data.links && data.links.length) {
+      if (!musicLayout && data && data.links && data.links.length && !(data.tracks && data.tracks.length) && !data.map) {
         var list = el('div', 'links');
         data.links.forEach(function (L) {
           if (isAudioLink(L.u) && /\.mp3(\?|$)/i.test(String(L.u))) {
@@ -715,21 +1255,83 @@
       message.style.height = 'auto';
 
       var qn = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (/^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) || qn === 'word' || /guarda en word|descarga el chat|dame la descarga/.test(qn)) {
-        if (lastBotText) {
+
+      // —— Descargas del último mensaje de Apsara (cliente; no pasar por la IA) ——
+      function doDownload(fmt) {
+        if (!lastBotText || !String(lastBotText).trim()) {
+          botBubble({ reply: 'Aún no hay texto de Apsara para guardar. Pide primero el contenido (ej. 5 recetas) y luego la descarga.', options: ['ayuda'] });
+          return;
+        }
+        if (fmt === 'word') {
           downloadWordDoc(lastBotText, 'apsara-vimana-chat');
+          botBubble({ reply: 'Listo: se descargó el archivo Word (.doc) con el contenido de la pantalla.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'txt') {
+          downloadTxtDoc(lastBotText, 'apsara-vimana-chat');
+          botBubble({ reply: 'Listo: archivo de texto (.txt) descargado.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'excel') {
+          downloadExcelDoc(lastBotText, 'apsara-vimana-chat');
+          botBubble({ reply: 'Listo: archivo Excel/CSV (.csv) descargado. Ábrelo con Excel o LibreOffice.', options: ['ayuda', 'limpiar'] });
+        } else if (fmt === 'ppt') {
+          downloadPptDoc(lastBotText, 'apsara-vimana-chat');
+          botBubble({ reply: 'Listo: presentación (.ppt) descargada.', options: ['ayuda', 'limpiar'] });
+        }
+      }
+      // Formato explícito en la frase → descarga directa (sin preguntar)
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|pasame|pásame|dame).{0,40}(word|docx|\.doc\b)/.test(qn) ||
+        /(word|docx).{0,40}(descarga|descargar|archivo|exportar)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) ||
+        qn === 'word' ||
+        /guarda en word/.test(qn)
+      ) {
+        doDownload('word');
+        return;
+      }
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|dame).{0,40}(excel|csv|hoja de calculo|hoja de cálculo)/.test(qn) ||
+        /(excel|csv).{0,40}(descarga|descargar|archivo|tabla)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(excel|csv)\b/.test(qn) ||
+        qn === 'excel' ||
+        /guarda en excel/.test(qn)
+      ) {
+        doDownload('excel');
+        return;
+      }
+      if (
+        /(descargar|descarga|exportar|copia|copiar|guardar|dame).{0,40}(\btxt\b|texto plano|archivo de texto)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(txt|texto)\b/.test(qn) ||
+        qn === 'txt' ||
+        /guarda en txt/.test(qn)
+      ) {
+        doDownload('txt');
+        return;
+      }
+      if (
+        /(descargar|descarga|exportar|copia|copiar).{0,40}(powerpoint|power point|\bppt\b)/.test(qn) ||
+        /^(descargar|descarga|exportar)\s+(en\s+)?(powerpoint|power point|ppt)\b/.test(qn) ||
+        qn === 'powerpoint' ||
+        /guarda en powerpoint/.test(qn)
+      ) {
+        doDownload('ppt');
+        return;
+      }
+      // Solo si pide descarga SIN formato → entonces preguntar
+      if (
+        /^(dame la descarga|descarga el chat|exportar chat|descargar|descarga|exportar)$/.test(qn.trim()) ||
+        (/dame la descarga|quiero la descarga|exportar (el )?chat/.test(qn) &&
+          !/(word|excel|csv|txt|ppt|powerpoint)/.test(qn))
+      ) {
+        if (lastBotText) {
           botBubble({
-            reply: '📄 **Listo.** Se descargó un archivo Word con el último mensaje de Apsara.',
-            options: ['ayuda', 'limpiar'],
+            reply: '¿En qué formato quieres la descarga?',
+            options: ['descargar word', 'descargar txt', 'descargar excel', 'descargar powerpoint', 'ayuda'],
           });
         } else {
-          botBubble({
-            reply: 'Aún no hay texto de Apsara para guardar. Pregunta algo y luego escribe *descargar word*.',
-            options: ['ayuda'],
-          });
+          botBubble({ reply: 'Aún no hay mensaje para exportar. Genera el contenido y luego pide la descarga.', options: ['ayuda'] });
         }
         return;
       }
+
 
       setBusy(true);
       try {
@@ -738,7 +1340,7 @@
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q, adminMode: adminMode }),
+          body: JSON.stringify({ q: q, adminMode: adminMode, history: collectHistory() }),
           signal: ctrl.signal
         });
         clearTimeout(to);

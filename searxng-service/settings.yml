@@ -1,12 +1,13 @@
 # SearXNG — JSON habilitado para Apsara Vimana
+# En Render puedes poner SEARXNG_SECRET; esta clave evita fallo si no hay env.
 use_default_settings: true
 
 general:
-  instance_name: "Apsara SearXNG"
+  instance_name: "Apsara Vimana SearXNG 2"
   debug: false
 
 server:
-  secret_key: "apsara-vimana-searxng-cambia-en-produccion-2026"
+  secret_key: "cambia-esta-clave-en-render-SEARXNG-SECRET-2026-apsara-vimana-b"
   limiter: false
   image_proxy: false
   method: "GET"

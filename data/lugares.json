@@ -1,0 +1,135 @@
+[
+  {
+    "id": "puttaparthi",
+    "nombres": [
+      "puttaparthi",
+      "prasanthi nilayam",
+      "ashram sai baba puttaparthi",
+      "sathya sai ashram"
+    ],
+    "titulo": "Prasanthi Nilayam — Puttaparthi",
+    "lat": 14.1652,
+    "lon": 77.8111,
+    "zoom": 14,
+    "nota": "Ashram de Sri Sathya Sai Baba, India"
+  },
+  {
+    "id": "shirdi",
+    "nombres": [
+      "shirdi",
+      "shiridi",
+      "sai baba shirdi"
+    ],
+    "titulo": "Shirdi — Maharashtra",
+    "lat": 19.7645,
+    "lon": 74.4762,
+    "zoom": 14,
+    "nota": "Samadhi de Shirdi Sai Baba"
+  },
+  {
+    "id": "isha",
+    "nombres": [
+      "isha",
+      "isha yoga",
+      "coimbatore isha",
+      "sadguru ashram",
+      "sadhguru ashram"
+    ],
+    "titulo": "Isha Yoga Center — Coimbatore",
+    "lat": 11.0014,
+    "lon": 76.7425,
+    "zoom": 13,
+    "nota": "Centro de Sadhguru / Isha Foundation"
+  },
+  {
+    "id": "rishikesh",
+    "nombres": [
+      "rishikesh",
+      "rishikesh india"
+    ],
+    "titulo": "Rishikesh",
+    "lat": 30.0869,
+    "lon": 78.2676,
+    "zoom": 13,
+    "nota": "Capital del yoga a orillas del Ganges"
+  },
+  {
+    "id": "varanasi",
+    "nombres": [
+      "varanasi",
+      "benarés",
+      "benares",
+      "kashi"
+    ],
+    "titulo": "Varanasi (Kashi)",
+    "lat": 25.3176,
+    "lon": 82.9739,
+    "zoom": 13,
+    "nota": "Ciudad sagrada del hinduismo"
+  },
+  {
+    "id": "tiruvannamalai",
+    "nombres": [
+      "tiruvannamalai",
+      "arunachala",
+      "ramana ashram",
+      "ramanashram"
+    ],
+    "titulo": "Tiruvannamalai — Arunachala",
+    "lat": 12.2253,
+    "lon": 79.0747,
+    "zoom": 13,
+    "nota": "Ashram de Ramana Maharshi"
+  },
+  {
+    "id": "pondicherry",
+    "nombres": [
+      "pondicherry",
+      "puducherry",
+      "auroville",
+      "sri aurobindo"
+    ],
+    "titulo": "Puducherry / Auroville",
+    "lat": 11.9416,
+    "lon": 79.8083,
+    "zoom": 12,
+    "nota": "Sri Aurobindo Ashram y Auroville"
+  },
+  {
+    "id": "san_salvador",
+    "nombres": [
+      "san salvador",
+      "el salvador capital",
+      "capital el salvador"
+    ],
+    "titulo": "San Salvador",
+    "lat": 13.6929,
+    "lon": -89.2182,
+    "zoom": 12,
+    "nota": "Capital de El Salvador"
+  },
+  {
+    "id": "santa_tecla",
+    "nombres": [
+      "santa tecla",
+      "nueva san salvador"
+    ],
+    "titulo": "Santa Tecla",
+    "lat": 13.6769,
+    "lon": -89.2797,
+    "zoom": 13,
+    "nota": "Santa Tecla, El Salvador"
+  },
+  {
+    "id": "maya",
+    "nombres": [
+      "tikal",
+      "guatemala tikal"
+    ],
+    "titulo": "Tikal, Guatemala",
+    "lat": 17.222,
+    "lon": -89.6237,
+    "zoom": 13,
+    "nota": "Sitio maya"
+  }
+]
