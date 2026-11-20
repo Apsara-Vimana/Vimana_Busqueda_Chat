@@ -7,6 +7,7 @@ const path = require('path');
 const { Readable } = require('stream');
 const express = require('express');
 const { procesar } = require('./lib/engine');
+const access = require('./lib/access');
 const { guardarMensaje } = require('./lib/neon');
 
 const app = express();
@@ -152,15 +153,68 @@ app.get('/api/audio', async (req, res) => {
   }
 });
 
+app.get('/api/access/status', (req, res) => {
+  try {
+    const st = typeof access.poolsStatus === 'function' ? access.poolsStatus() : null;
+    res.json(
+      st || {
+        required: access.accessRequired(),
+        instance: process.env.INSTANCE_POOL || 'A',
+        pools: { A: true, B: true, C: true },
+      }
+    );
+  } catch (e) {
+    res.json({ required: false, error: String(e && e.message) });
+  }
+});
+
+app.post('/api/access', (req, res) => {
+  const code = (req.body && (req.body.code || req.body.clave || req.body.q)) || '';
+  const info = access.accessInfo(code);
+  if (!access.accessRequired()) {
+    return res.json({
+      ok: true,
+      reply: 'Acceso abierto (no hay claves configuradas en el servidor).',
+      pool: 'default',
+    });
+  }
+  if (!info.ok) {
+    return res.status(401).json({
+      ok: false,
+      reply: 'Clave no válida. Escribe en la barra tu clave de chat (la que te compartió Vimana) y pulsa enviar.',
+    });
+  }
+  return res.json({
+    ok: true,
+    reply: 'Namaste. Acceso activo. Ya puedes usar el chat de Apsara Vimana.',
+    pool: info.pool,
+    code: info.code,
+  });
+});
+
 app.post('/api/chat', async (req, res) => {
   try {
     wakeSearx().catch(() => {});
 
     const q =
       (req.body && (req.body.q || req.body.message || req.body.text)) || '';
+    const accessCode =
+      (req.body && (req.body.accessCode || req.body.code || req.body.clave)) || '';
     const adminMode = !!(req.body && (req.body.adminMode || req.body.admin));
     const history = (req.body && Array.isArray(req.body.history)) ? req.body.history : [];
-    const data = await procesar(String(q), { adminMode, history });
+
+    if (access.accessRequired() && !access.isValidCode(accessCode)) {
+      return res.status(401).json({
+        reply:
+          'Introduce tu clave de chat en la barra y envía. Sin clave válida el servicio no responde.',
+        links: [],
+        options: [],
+        access: false,
+      });
+    }
+
+    const searxUrl = access.searxUrlForCode(accessCode);
+    const data = await procesar(String(q), { adminMode, history, searxUrl, accessCode });
 
     Promise.resolve()
       .then(async () => {
