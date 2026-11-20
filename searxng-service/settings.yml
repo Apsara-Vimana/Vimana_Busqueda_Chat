@@ -6,8 +6,8 @@ general:
   debug: false
 
 server:
-  secret_key: "cambia-esta-clave-en-cada-instancia-apsara-searxng-2026"
-  limiter: false
+  secret_key: "${SEARXNG_SECRET}"
+  limiter: true
   image_proxy: false
   method: "GET"
 

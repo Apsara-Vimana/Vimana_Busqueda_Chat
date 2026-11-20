@@ -1,0 +1,846 @@
+/**
+ * Apsara Vimana engine v9
+ * Orden: 1) Datos locales  2) IA (OpenRouter)  3) SearXNG  4) Wikipedia  5) Yahoo
+ * La IA no llama herramientas ni web; responde como agente espiritual.
+ */
+const { tryTools } = require('./tools');
+const { tryMusic } = require('./music');
+const { tryMaps } = require('./maps');
+const { tryJamendo, isJamendoQuery, isNonListenMusicTalk } = require('./jamendo');
+const { tryAyurveda } = require('./ayurveda');
+const { tryDharmic, isOtherSacredBook } = require('./dharmic');
+const { tryMaestros, masterAiContext } = require('./maestros');
+const { procesarBiblioteca } = require('./biblioteca');
+const { tryRecipes } = require('./recipes');
+const { tryLocalKnowledge } = require('./glosario');
+const { pickImage } = require('./images');
+const { hasOpenRouter, generateApsaraReply, generateMasterReply, getModel } = require('./llm');
+
+const SEARX_FALLBACK = [
+  'https://paulgo.io',
+  'https://searx.be'];
+
+const TIMEOUT_OWN_MS = 14000; // propio SearXNG (ya despierto)
+const TIMEOUT_FAST_MS = 5000;  // respaldos rápidos
+
+function getOwnSearx() {
+  return (process.env.SEARXNG_URL || '').trim().replace(/\/$/, '');
+}
+
+function getSearxInstances() {
+  const own = getOwnSearx();
+  if (own) return [own, ...SEARX_FALLBACK.filter((u) => u !== own)];
+  return [...SEARX_FALLBACK];
+}
+
+function isSpamResult(r) {
+  const t = ((r && r.t) || '') + ' ' + ((r && r.snippet) || '') + ' ' + ((r && r.u) || '');
+  const n = t.toLowerCase();
+  if (/domino.?s|pizza|promo|cupon|cupón|casino|viagra|onlyfans|betting|apuestas/.test(n)) return true;
+  // foros de juegos / nodebb / ahorcado / racing irrelevante
+  if (/nodebb|el ahorcado|\[juego\]|juegos-de-fútbol|juegos de futbol|prema racing|racing team|foro\.|phpbb|vbulletin/.test(n)) return true;
+  if (/\/topic\/\d+|\/thread\/\d+/.test(n) && /juego|game|letra r\b/.test(n)) return true;
+  return false;
+}
+
+function cleanAiText(text) {
+  let t = String(text || '').trim();
+  // Quitar encabezados duplicados del modelo
+  t = t.replace(/^(✨\s*)?\*?\*?Urvashi Apsara Vimana\*?\*?\s*/i, '');
+  t = t.replace(/^(✨\s*)?\*?\*?Urvashi Apsara Vimana\*?\*?\s*/i, '');
+  t = t.replace(/\n{3,}/g, '\n\n');
+  return t.trim();
+}
+
+function respuesta(reply, links, options, extra) {
+  const base = {
+    reply: reply || '',
+    links: Array.isArray(links) ? links : [],
+    options: Array.isArray(options) ? options : [],
+    ...(extra || {}),
+  };
+  if (!base.image) {
+    try {
+      const qctx = base._q || respuesta._lastQ || '';
+      const img = typeof pickImage === 'function' ? pickImage(qctx, '') : null;
+      if (img && img.src) {
+        base.image = img.src;
+        base.imageSize = img.size || 'card';
+        base.imageAlt = img.alt || '';
+      }
+    } catch (_) { /* sin imagen */ }
+  }
+  delete base._q;
+  return base;
+}
+
+function norm(t) {
+  return String(t || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[¿?¡!.,;:()[\]{}«»"']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function fetchText(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'User-Agent': 'ApsaraVimana/8.2 (Render; +https://github.com/Apsara-Vimana)',
+      },
+    });
+    const text = await r.text();
+    return { ok: r.ok, status: r.status, text, contentType: r.headers.get('content-type') || '' };
+  } catch (e) {
+    return { ok: false, status: 0, text: '', error: e.message || 'abort' };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function parseSearxJson(text) {
+  if (!text || !text.trim()) return null;
+  try {
+    const data = JSON.parse(text);
+    if (!data || !Array.isArray(data.results)) return null;
+    const results = data.results
+      .filter((r) => r && r.url && (r.title || r.content))
+      .slice(0, 4)
+      .map((r) => ({
+        t: String(r.title || r.url).slice(0, 140),
+        u: r.url,
+        snippet: String(r.content || r.pretty_url || '')
+          .replace(/\s+/g, ' ')
+          .slice(0, 200),
+      }));
+    return results.length ? results : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Busca en una instancia. own=true → más tiempo de espera.
+ */
+async function searchOneSearx(base, query, own) {
+  const q = encodeURIComponent(query);
+  const url = `${base}/search?q=${q}&format=json&language=es-ES`;
+  const timeout = own ? TIMEOUT_OWN_MS : TIMEOUT_FAST_MS;
+  const res = await fetchText(url, timeout);
+  if (!res.ok) {
+    return { results: null, status: res.status, error: res.error || 'http ' + res.status };
+  }
+  const results = parseSearxJson(res.text);
+  if (!results) {
+    return {
+      results: null,
+      status: res.status,
+      error: res.text.trim().startsWith('<') ? 'HTML en vez de JSON' : 'JSON vacío o inválido',
+    };
+  }
+  return { results, status: 200, error: null };
+}
+
+async function searchSearx(query) {
+  const own = getOwnSearx();
+  const tried = [];
+
+  // 1) Siempre primero tu instancia
+  if (own) {
+    const r = await searchOneSearx(own, query, true);
+    tried.push({ base: own, status: r.status, error: r.error });
+    if (r.results) return { results: r.results, engine: own, tried };
+  }
+
+  // 2) Fallbacks públicos (rápidos)
+  for (const base of SEARX_FALLBACK) {
+    if (base === own) continue;
+    const r = await searchOneSearx(base, query, false);
+    tried.push({ base, status: r.status, error: r.error });
+    if (r.results) return { results: r.results, engine: base, tried };
+  }
+
+  return { results: [], engine: null, tried };
+}
+
+async function searchWiki(query) {
+  const api =
+    'https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=' +
+    encodeURIComponent(query) +
+    '&utf8=1&format=json&origin=*&srlimit=3';
+  const res = await fetchText(api, TIMEOUT_FAST_MS);
+  if (!res.ok) return null;
+  let search;
+  try {
+    search = JSON.parse(res.text);
+  } catch {
+    return null;
+  }
+  const hits = search && search.query && search.query.search;
+  if (!hits || !hits.length) return null;
+  const title = hits[0].title;
+  const extractUrl =
+    'https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=' +
+    encodeURIComponent(title) +
+    '&format=json&origin=*';
+  const detailRes = await fetchText(extractUrl, TIMEOUT_FAST_MS);
+  if (!detailRes.ok) return null;
+  let detail;
+  try {
+    detail = JSON.parse(detailRes.text);
+  } catch {
+    return null;
+  }
+  const pages = detail && detail.query && detail.query.pages;
+  if (!pages) return null;
+  const page = Object.values(pages)[0];
+  if (!page || !page.extract) return null;
+  return {
+    title: page.title || title,
+    extract: String(page.extract).slice(0, 850),
+    url: 'https://es.wikipedia.org/wiki/' + encodeURIComponent(page.title || title),
+  };
+}
+
+function yahooUrl(query) {
+  return 'https://search.yahoo.com/search?p=' + encodeURIComponent(query);
+}
+
+function tryMath(q) {
+  const n = norm(q);
+  const m =
+    n.match(/(?:cuanto es|calcula|calc)\s*([0-9+\-*/().%\s]+)/i) ||
+    n.match(/^([0-9+\-*/().%]+)$/);
+  if (!m) return null;
+  const expr = m[1].replace(/\s+/g, '');
+  if (!/^[\d+\-*/().%]+$/.test(expr) || expr.length < 3) return null;
+  try {
+    const v = new Function('return (' + expr + ')')();
+    if (typeof v !== 'number' || !isFinite(v)) return null;
+    return String(Math.round(v * 1e10) / 1e10);
+  } catch {
+    return null;
+  }
+}
+
+async function attachWebSecondary(base, query) {
+  // Segunda burbuja: no mezclar con el texto local
+  try {
+    const searx = await searchSearx(query);
+    if (searx && searx.results && searx.results.length) {
+      const top = searx.results.filter((r) => !isSpamResult(r)).slice(0, 3);
+      if (top.length) {
+        const lines = top.map((r, i) => {
+          let s = `${i + 1}. **${r.t}**`;
+          const sn = (r.snippet || '').trim();
+          if (sn) s += `\n   ${sn.length > 220 ? sn.slice(0, 220).replace(/\s+\S*$/, '') + '…' : sn}`;
+          return s;
+        });
+        base.secondary_reply = `🔍 **Búsqueda web**\n\n` + lines.join('\n\n');
+        base.secondary_links = top.map((r) => ({ t: r.t, u: r.u }));
+        return base;
+      }
+    }
+    const wiki = await searchWiki(query);
+    if (wiki) {
+      base.secondary_reply =
+        `📘 **Wikipedia** — ${wiki.title}\n\n${(wiki.extract || '').slice(0, 450)}`;
+      base.secondary_links = [{ t: 'Leer en Wikipedia', u: wiki.url }];
+    }
+  } catch (_) {}
+  return base;
+}
+
+async function procesar(pregunta, opts = {}) {
+  const chatHistory = Array.isArray(opts.history) ? opts.history : [];
+  const q = String(pregunta || '').trim();
+  if (!q) return respuesta('Escribe un mensaje o una búsqueda.');
+
+  const n = norm(q);
+  const own = getOwnSearx();
+
+  // Solo comando oculto ESTADO55V (no mostrar en menús al usuario)
+  if (n === 'estado55v') {
+    let probeMsg = 'no probado';
+    if (own) {
+      const probe = await searchOneSearx(own, 'test', true);
+      probeMsg = probe.results
+        ? `OK (${probe.results.length} resultados de prueba)`
+        : `falló: ${probe.error || probe.status}`;
+    }
+    return respuesta(
+      `**Estado del motor**\n\n` +
+        `• SEARXNG_URL: ${own || '⚠️ NO DEFINIDA en el servicio del chat'}\n` +
+        `• DATABASE_URL (Neon): ${process.env.DATABASE_URL ? 'conectada' : 'no definida'}\n` +
+        `• OpenRouter (Nemotron): ${hasOpenRouter() ? 'clave presente · ' + getModel() : 'sin clave'}\n` +
+        `• Prueba a tu SearXNG: ${probeMsg}\n\n` +
+        (own
+          ? `Si la URL está bien pero falla, el free tier puede estar dormido: espera 1 min y reintenta.`
+          : `Pon en Render (servicio del CHAT) la variable:\nSEARXNG_URL=https://apsara-searxng.onrender.com`),
+      own ? [{ t: 'Abrir tu SearXNG', u: own }] : [],
+      ['ayuda', 'casa', 'dharma']
+    );
+  }
+
+  if (['limpiar', 'borrar chat', 'reiniciar', 'vaciar'].some((k) => n === k)) {
+    return respuesta('Chat limpio. Namaste 🌺', [], ['ayuda'], { action: 'LIMPIAR' });
+  }
+
+  if (['ayuda', 'comandos', 'menu'].some((k) => n === k || n.startsWith(k))) {
+    const helpTxt =
+      'Ayuda — Apsara Vimana\n\n' +
+      '• Escribe un tema y te respondemos con lo que haya disponible\n' +
+      '• vimana music / radio online — música del proyecto\n' +
+      '• Música instrumental: piano instrumental, ambient, new age, jazz instrumental, quiero escuchar música instrumental\n' +
+      '• clima en … — tiempo actual\n' +
+      '• mapa de … / waze — mapa OpenStreetMap + enlace Waze\n' +
+      '• libros de sai baba / biblioteca — PDFs y lecturas\n' +
+      '• receta vegetariana — productos/recetas\n' +
+      '• descargar word | txt | excel | powerpoint — exportar último mensaje\n' +
+      '• gita capítulo 1 (hasta 18) — versos; o pregunta por karma, dharma, devoción\n' +
+      '• Plantas: tulsi, ashwagandha, etc.\n' +
+      '• limpiar — vaciar el chat (solo esa palabra)\n' +
+      '• cuanto es 12*5 — calculadora\n\n' +
+      'Si el chat no responde bien, espera un momento e inténtalo de nuevo. Namaste';
+    return respuesta(
+      helpTxt,
+      [{ t: 'Sitio Vimana', u: 'https://vimana.rf.gd/' }],
+      ['gita capítulo 1', 'vimana music', 'piano instrumental', 'limpiar']
+    );
+  }
+
+  // Saludos cálidos (nunca mencionar SearXNG al usuario)
+  if (
+    /^(hola|hello|hey|buenas|buen dia|buen día|buenos dias|buenos días|buenas tardes|buenas noches|namaste|namasté|namaskar|pranaam|pranam|om sai ram|sai ram|hare krishna|jai sri ram|jey sri ram|jay shri ram)\b/.test(
+      n
+    ) &&
+    n.length < 60 &&
+    !/\b(busca|buscar|clima|gita|libro|que es|qué es|quien es|quién es|como te llamas|cómo te llamas|tu nombre|quien eres|quién eres)\b/.test(n)
+  ) {
+    const saludo =
+      '¡Hola! Qué gusto saludarte hoy. Espero que tu día vaya marchando con mucha calma y buena energía.\n\n' +
+      'Estoy aquí para acompañarte en lo que necesites: conversar, reflexionar, maestros, Ayurveda, yoga, filosofía o lo que surja del corazón.\n\n' +
+      '¿Cómo te sientes hoy y en qué te puedo ayudar?';
+    return respuesta(saludo, [], ['quién eres', 'ayuda', 'vimana music']);
+  }
+
+  const math = tryMath(q);
+  if (math != null) return respuesta(`🔢 Resultado: **${math}**`, [], ['ayuda']);
+
+  // Mapas Leaflet/OSM + Waze
+  try {
+    const mp = await tryMaps(q);
+    if (mp && mp.reply) {
+      return respuesta(mp.reply, mp.links || [], mp.options || ['ayuda'], {
+        map: mp.map || null,
+      });
+    }
+  } catch (e) {
+    console.error('maps', e && e.message);
+  }
+
+  // Recetas vegetarianas (Open Food Facts / Edamam opcional)
+  try {
+    const rec = await tryRecipes(q);
+    if (rec && rec.reply) {
+      return respuesta(rec.reply, rec.links || [], rec.options || ['ayuda']);
+    }
+  } catch (e) {
+    console.error('recipes', e && e.message);
+  }
+
+  // Música Vimana + Jamendo (await; antes de IA)
+  try {
+    const mus = await tryMusic(q);
+    if (mus && mus._forceWeb) {
+      let out = respuesta(mus.reply, mus.links || [], mus.options || ['ayuda'], {
+        image: mus.image || '/imagenes/Pensando.jpg',
+        imageSize: mus.imageSize || 'state',
+        imageAlt: mus.imageAlt || 'Pensando',
+      });
+      out = await attachWebSecondary(out, mus._topic || q);
+      if (out.secondary_reply) return out;
+    } else if (mus && mus.reply) {
+      return respuesta(mus.reply, mus.links || [], mus.options || ['ayuda'], {
+        media: mus.media || [],
+        tracks: mus.tracks || [],
+        image: mus.image,
+        imageSize: mus.imageSize,
+        imageAlt: mus.imageAlt,
+      });
+    }
+  } catch (e) {
+    console.error('music', e && e.message);
+  }
+
+
+  const query = q.replace(/^\/?buscar\s+/i, '').trim() || q;
+
+  
+
+  // Música / radio Vimana (prioridad propia)
+  
+
+  // Biblioteca local (libros Sai + maestros) ANTES de ficha biográfica
+  try {
+    if (
+      typeof procesarBiblioteca === 'function' &&
+      (/\b(libro|libros|biblioteca|vahini|bhajanavali|descargar pdf|recomend|lectura)\b/.test(n) ||
+        (/\b(sai baba|sathya sai)\b/.test(n) && /\b(libro|libros|leer|pdf|link|enlace|descarga|recomend)\b/.test(n)))
+    ) {
+      const bib = procesarBiblioteca(q);
+      if (bib && bib.reply) {
+        const extra = {};
+        if (/sai|sathya/i.test(n) || /sai|sathya/i.test(bib.reply || '')) {
+          extra.image = '/imagenes/SathyaSaiBaba.jpg';
+          extra.imageSize = 'card';
+          extra.imageAlt = 'Biblioteca Sai';
+        }
+        return respuesta(bib.reply, bib.links || [], bib.options || ['📚 Menú biblioteca', 'ayuda'], extra);
+      }
+    }
+  } catch (e) {
+    console.error('biblioteca', e && e.message);
+  }
+
+  // 0) Maestros ANTES del glosario (evita "Ravi Shankar" = sitar del glosario musical)
+  try {
+    const ma = tryMaestros(q);
+    if (ma && ma._askChoice) {
+      return respuesta(ma.reply, ma.links || [], ma.options || [], {
+        image: ma.image || '/imagenes/Pensando.jpg',
+        imageSize: ma.imageSize || 'state',
+        imageAlt: ma.imageAlt || 'Pensando',
+      });
+    }
+    if (ma && ma._aiMaster && ma.master && hasOpenRouter()) {
+      try {
+        const ctx = masterAiContext(ma.master, q);
+        const ai = await generateMasterReply(q, ctx);
+        if (ai && String(ai).trim().length > 40) {
+          const body = String(ai).replace(/^\*\*Urvashi Apsara Vimana\*\*\s*/i, '').trim();
+          const extra = {};
+          if (ma.master.image) {
+            extra.image = ma.master.image;
+            extra.imageSize = 'card';
+            extra.imageAlt = ma.master.title;
+          }
+          return respuesta('✨ Urvashi Apsara Vimana\n\n' + cleanAiText(body), [], [], extra);
+        }
+      } catch (_) {}
+      return respuesta(ma.reply || ma.master.summary, [], [], {
+        image: ma.image || (ma.master && ma.master.image),
+        imageSize: 'card',
+        imageAlt: ma.master && ma.master.title,
+      });
+    }
+    if (ma && ma.reply) {
+      return respuesta(ma.reply, ma.links || [], ma.options || [], {
+        image: ma.image,
+        imageSize: ma.imageSize || 'card',
+        imageAlt: ma.imageAlt,
+      });
+    }
+  } catch (e) { /* seguir */ }
+
+
+  // Contactos/web del maestro sin nombre claro → no buscar basura (cafeterías, etc.)
+  try {
+    const nContact = n;
+    if (
+      /contacto|contactos|sitio web|sitios web|pagina oficial|página oficial|web oficial|pagina web|página web/.test(
+        nContact
+      ) &&
+      /maestro|maestra|gur[uú]/.test(nContact)
+    ) {
+      // si maestros no matcheó arriba, pedir nombre
+      const { findMaster: fm } = require('./maestros');
+      if (!fm(q)) {
+        return respuesta(
+          '🌐 **Sitios oficiales**\n\n' +
+            'Para darte los **contactos o páginas oficiales correctas**, dime el nombre del maestro, por ejemplo:\n\n' +
+            '• *sitio web de Sri Sri Ravi Shankar*\n' +
+            '• *contactos de Sadhguru*\n' +
+            '• *página oficial de Sathya Sai Baba*\n\n' +
+            'Así evitamos resultados confusos y te orientamos a fuentes de la tradición.',
+          [],
+          [
+            'sitio web Sri Sri Ravi Shankar',
+            'contactos Sadhguru',
+            'página oficial Sathya Sai Baba',
+            'ayuda',
+          ]
+        );
+      }
+    }
+  } catch (_) {}
+
+  // 0b) Identidad Vimana + glosario sánscrito local
+  try {
+    const loc = tryLocalKnowledge(q);
+    if (loc && loc.reply) {
+      return respuesta(loc.reply, loc.links || [], loc.options || ['ayuda'], {
+        image: loc.image,
+        imageSize: loc.imageSize,
+        imageAlt: loc.imageAlt,
+      });
+    }
+  } catch (e) { /* seguir */ }
+
+
+    // 1c) Libros sagrados ≠ Gita (ej. Bhakti-rasamrta-sindhu) → IA, no FAQ Gita
+  try {
+    if (typeof isOtherSacredBook === 'function' && isOtherSacredBook(n) && hasOpenRouter()) {
+      const ai = await generateApsaraReply({
+            history: chatHistory,
+        pregunta: q,
+        localContext:
+          'El usuario pregunta por un libro sagrado DISTINTO del Bhagavad Gita. ' +
+          'Habla de ESE libro (autor, contenido, importancia en el bhakti). ' +
+          'Ejemplo: Bhakti-rasāmṛta-sindhu (Néctar de la devoción) de Rūpa Gosvāmī. ' +
+          'NO respondas con versos ni FAQ del Gita.',
+      });
+      if (ai && String(ai).trim().length > 40) {
+        const body = cleanAiText(ai);
+        return respuesta('✨ Urvashi Apsara Vimana\n\n' + body, [], ['ayuda']);
+      }
+    }
+  } catch (e) { /* seguir */ }
+
+  // 2) Ayurveda / plantas — solo si la consulta es claramente de hierbas
+  try {
+    const ay = await tryAyurveda(q);
+    if (ay && ay._forceWeb) {
+      let out = respuesta(ay.reply, ay.links || [], ay.options || ['ayuda'], {
+        image: ay.image,
+        imageSize: ay.imageSize || 'state',
+        imageAlt: ay.imageAlt,
+      });
+      out = await attachWebSecondary(out, ay._topic || q);
+      if (out.secondary_reply) return out;
+    } else if (ay && ay.reply) {
+      // Definición o “más sobre Ayurveda”: priorizar IA, no SearXNG
+      if ((ay._aiEnrich || ay._forceAi) && hasOpenRouter()) {
+        try {
+          const ai = await generateApsaraReply({
+            history: chatHistory,
+            pregunta: q,
+            localContext:
+              (ay._forceAi
+                ? 'PROFUNDIZAR en Ayurveda. REGLA: no repitas la definición básica (“ciencia de la vida” / intro de 5000 años) si el usuario ya la vio. ' +
+                  'Avanza en un ángulo nuevo: doshas, dinacharya, alimentación, hierbas o equilibrio. ' +
+                  'Sé interactiva: al final ofrece 2–3 caminos posibles (A/B/C). NO digas que buscas en internet.\n\n'
+                : '') +
+              (ay._deepTopic ? 'Ángulo sugerido: ' + ay._deepTopic + '\n\n' : '') +
+              (ay.reply || ''),
+            webSnippets: '',
+          });
+          if (ai && String(ai).trim().length > 60) {
+            const body = String(ai).replace(/^\*\*Urvashi Apsara Vimana\*\*\s*/i, '').trim();
+            return respuesta(
+              '✨ Urvashi Apsara Vimana\n\n' + cleanAiText(body),
+              ay.links || [],
+              ay.options || ['Plantas Ayurveda', 'tulsi', 'ayuda'],
+              { image: ay.image, imageSize: ay.imageSize, imageAlt: ay.imageAlt }
+            );
+          }
+        } catch (_) {}
+      }
+      // Fallback local (definición) — nunca volcado de búsqueda para este tema
+      return respuesta(ay.reply, ay.links || [], ay.options || ['ayuda'], {
+        image: ay.image,
+        imageSize: ay.imageSize,
+        imageAlt: ay.imageAlt,
+      });
+    }
+  } catch (e) { /* seguir */ }
+
+
+
+
+  // Herramientas exactas (clima, divisa, país) — antes de la web
+  try {
+    const tool = await tryTools(q);
+    if (tool && tool.reply) {
+      return respuesta(tool.reply, tool.links || [], ['ayuda', 'limpiar']);
+    }
+  } catch (e) { /* seguir búsqueda */ }
+
+
+  // 2b) Escrituras (Gita, Vedas, Ramayana) — antes que plantas
+  try {
+    const dh = await tryDharmic(q);
+    if (dh && dh._forceWeb) {
+      const webQ = dh._topic || q;
+      let out = respuesta(dh.reply || '📚 Buscando el libro en internet…', dh.links || [], dh.options || ['ayuda'], {
+        image: '/imagenes/Pensando.jpg',
+        imageSize: 'state',
+        imageAlt: 'Pensando',
+      });
+      out = await attachWebSecondary(out, webQ);
+      if (out.secondary_reply) return out;
+      // si falla secondary, continuar pipeline web normal con la misma query
+      q = webQ;
+    } else if (dh && dh._askChoice) {
+      return respuesta(dh.reply, dh.links || [], dh.options || ['ayuda'], {
+        image: dh.image,
+        imageSize: dh.imageSize || 'state',
+        imageAlt: dh.imageAlt || 'Pensando',
+      });
+    } else if (dh && dh._versesOnly && dh.reply) {
+      // Solo versos: UNA burbuja, sin web
+      return respuesta(dh.reply, dh.links || [], dh.options || ['ayuda']);
+    } else if (dh && dh.reply) {
+      // Explicación Gita / ampliar → IA (no listar versos ni SearXNG)
+      if ((dh._forceAi || dh._gitaExplain || dh._aiEnrich) && hasOpenRouter()) {
+        try {
+          const level = dh._gitaLevel || 'general';
+          const topics = (dh._gitaTopics || []).join(', ');
+          const ai = await generateApsaraReply({
+            history: chatHistory,
+            pregunta: q,
+            localContext:
+              'Tema: Bhagavad Gita. Modo: EXPLICACIÓN (no vuelques versos sánscritos ni listas de ślokas salvo que el usuario pida un verso concreto).\n' +
+              'Nivel: ' +
+              level +
+              '. ' +
+              (topics ? 'Ángulos pedidos: ' + topics + '. ' : '') +
+              'Si piden pocas líneas, sé breve. Si piden principiante, lenguaje muy claro. ' +
+              'Al final, invita a seguir con 2–3 caminos del mismo tema (karma yoga, cap. 2, aplicación hoy) sin salir del Gita.\n\n' +
+              'Base local:\n' +
+              (dh.reply || ''),
+            webSnippets: '',
+          });
+          if (ai && String(ai).trim().length > 50) {
+            const body = String(ai).replace(/^\*\*Urvashi Apsara Vimana\*\*\s*/i, '').trim();
+            return respuesta(
+              '✨ Urvashi Apsara Vimana\n\n' + cleanAiText(body),
+              dh.links || [],
+              dh.options || ['Gita para principiantes', 'Karma yoga en el Gita', 'Gita capítulo 2', 'ayuda'],
+              { image: dh.image, imageSize: dh.imageSize, imageAlt: dh.imageAlt }
+            );
+          }
+        } catch (_) {}
+      }
+      return respuesta(dh.reply, dh.links || [], dh.options || ['ayuda'], {
+        image: dh.image,
+        imageSize: dh.imageSize,
+        imageAlt: dh.imageAlt,
+      });
+    }
+  } catch (e) { /* seguir */ }
+
+
+
+  // Letras sueltas A–D o frases de menú Ayurveda → tryAyurveda (no SearXNG)
+  try {
+    const menuHit =
+      /^(?:opci[oó]n\s*)?[abcd]\s*[).]?$/.test(n) ||
+      /plantas de la base ayurveda|base ayurveda|los tres doshas|rutina diaria dinacharya|alimentaci[oó]n seg[uú]n ayurveda/.test(
+        n
+      );
+    if (menuHit) {
+      const ay = await tryAyurveda(q);
+      if (ay && ay.reply) {
+        if ((ay._aiEnrich || ay._forceAi) && hasOpenRouter()) {
+          try {
+            const ai = await generateApsaraReply({
+            history: chatHistory,
+              pregunta: q,
+              localContext:
+                'El usuario eligió una opción del menú Ayurveda (A/B/C/D). Desarrolla ese ángulo sin repetir intros largas. Ofrece de nuevo A/B/C/D al final si cabe.\n\n' +
+                (ay.reply || ''),
+              webSnippets: '',
+            });
+            if (ai && String(ai).trim().length > 50) {
+              const body = String(ai).replace(/^\*\*Urvashi Apsara Vimana\*\*\s*/i, '').trim();
+              return respuesta(
+                '✨ Urvashi Apsara Vimana\n\n' + cleanAiText(body),
+                ay.links || [],
+                ay.options || ['Plantas Ayurveda', 'ayuda'],
+                { image: ay.image, imageSize: ay.imageSize, imageAlt: ay.imageAlt }
+              );
+            }
+          } catch (_) {}
+        }
+        return respuesta(ay.reply, ay.links || [], ay.options || ['ayuda'], {
+          image: ay.image,
+          imageSize: ay.imageSize,
+          imageAlt: ay.imageAlt,
+        });
+      }
+    }
+  } catch (_) {}
+
+  // Forzar Jamendo (reproductores reales) antes de IA — cualquier género instrumental / nueva era
+  try {
+    if (typeof isJamendoQuery === 'function' && isJamendoQuery(n)) {
+      const jam = await tryJamendo(q);
+      if (jam && jam.reply) {
+        return respuesta(jam.reply, jam.links || [], jam.options || ['ayuda'], {
+          tracks: jam.tracks || [],
+        });
+      }
+    }
+    // refuerzo por frases de escucha + género amplio
+    if (
+      /\b(escuchar|quiero escuchar|ponme|reproduce|reproducir|oir|oír|play)\b/.test(n) &&
+      /\b(musica|música|piano|instrumental|ambient|jazz|new age|nueva era|newage|relaj|meditacion|meditación|guitar|flute|jamendo)\b/.test(
+        n
+      )
+    ) {
+      const jam = await tryJamendo(q);
+      if (jam && jam.reply) {
+        return respuesta(jam.reply, jam.links || [], jam.options || ['ayuda'], {
+          tracks: jam.tracks || [],
+        });
+      }
+    }
+  } catch (e) {
+    console.error('jamendo force', e && e.message);
+  }
+
+  // Ampliar tema en plática (“háblame más…”) → IA (no música)
+  try {
+    const expand =
+      /\b(hablame mas|háblame más|hablame más|cuentame mas|cuéntame más|mas sobre el tema|más sobre el tema|profundiza|amplia el tema|amplía el tema|quiero saber mas sobre|quiero saber más sobre)\b/.test(
+        n
+      ) &&
+      !/\b(piano|instrumental|jamendo|escuchar musica|escuchar música)\b/.test(n);
+    if (expand && hasOpenRouter()) {
+      const ai = await generateApsaraReply({
+        history: chatHistory,
+        pregunta: q,
+        localContext:
+          'El usuario quiere que amplíes el tema. Profundiza sin repetir lo mismo de antes. ' +
+          'Si el pedido es vago, aclara con 2–3 opciones concretas (A/B/C) para que elija. ' +
+          'Tono cálido e interactivo (2–6 párrafos). No digas que buscas en internet.',
+        webSnippets: '',
+      });
+      if (ai && String(ai).trim().length > 60) {
+        const body = cleanAiText(ai);
+        return respuesta('✨ Urvashi Apsara Vimana\n\n' + body, [], ['ayuda', 'limpiar']);
+      }
+    }
+  } catch (_) {}
+
+  // Comando explícito: solo SearXNG / web (sin IA)
+  const forceSearx =
+    /^buscar en searxng\b/i.test(q) ||
+    /^busca en searxng\b/i.test(q) ||
+    /^buscar en internet\b/i.test(q) ||
+    /^busca en la web\b/i.test(q);
+  const searxQuery = forceSearx
+    ? q
+        .replace(/^buscar en searxng\s*/i, '')
+        .replace(/^busca en searxng\s*/i, '')
+        .replace(/^buscar en internet\s*/i, '')
+        .replace(/^busca en la web\s*/i, '')
+        .trim() || q
+    : query;
+
+  // IA (OpenRouter Nemotron) — no intercepte música instrumental
+  if (
+    !forceSearx &&
+    hasOpenRouter() &&
+    !(typeof isJamendoQuery === 'function' && isJamendoQuery(n)) &&
+    !(/\b(piano instrumental|escuchar piano|musica instrumental|música instrumental)\b/.test(n))
+  ) {
+    try {
+      const ai = await generateApsaraReply({
+            history: chatHistory,
+        pregunta: q,
+        localContext: '',
+        webSnippets: undefined,
+      });
+      if (ai) {
+        const body = String(ai).replace(/^\*\*Urvashi Apsara Vimana\*\*\s*/i, '').trim();
+        return respuesta(
+          `✨ Urvashi Apsara Vimana\n\n${cleanAiText(body)}`,
+          [],
+          ['ayuda', 'limpiar']
+        );
+      }
+    } catch (e) {
+      /* IA caída → SearXNG */
+    }
+  }
+
+  // SearXNG visible: si la IA falló, o el usuario pidió "buscar en searxng …"
+  let searx = { results: null, tried: [] };
+  try {
+    searx = (await searchSearx(searxQuery)) || searx;
+  } catch (e) {
+    searx = { results: null, tried: [{ base: 'searx', error: 'fallo temporal' }] };
+  }
+  if (searx && searx.results && searx.results.length) {
+    const top = searx.results.filter((r) => !isSpamResult(r)).slice(0, 5);
+    if (top.length) {
+      const lines = top.map((r, i) => {
+        let s = `${i + 1}. **${r.t}**`;
+        const sn = (r.snippet || '').trim();
+        if (sn) {
+          const max = 320;
+          const body =
+            sn.length > max ? sn.slice(0, max).replace(/\s+\S*$/, '') + '…' : sn;
+          s += `\n   ${body}`;
+        }
+        return s;
+      });
+      return respuesta(
+        `🔍 **VIMANA (Búsqueda:)** ${searxQuery}\n\n${lines.join('\n\n')}`,
+        top.map((r) => ({ t: r.t, u: r.u })),
+        ['ayuda', 'limpiar']
+      );
+    }
+  }
+
+  // detalle del fallo
+  const failHint = (searx.tried || [])
+    .map((t) => `• ${t.base}: ${t.error || t.status}`)
+    .join('\n');
+
+  // 2) Wikipedia
+  const wiki = await searchWiki(query);
+  if (wiki) {
+    return respuesta(
+      `🔍 **VIMANA (Búsqueda:)** Wikipedia — ${wiki.title}\n\n${wiki.extract}\n\n` +
+        `_Si necesitas más detalle, prueba de nuevo en un momento._`,
+      [
+        { t: 'Leer artículo completo', u: wiki.url },
+        { t: 'Buscar en Yahoo', u: yahooUrl(query) },
+        ...(own ? [{ t: 'Sitio Vimana', u: 'https://vimana.rf.gd/' }] : [])],
+      ['ayuda', 'limpiar']
+    );
+  }
+
+  // 3) Yahoo
+  return respuesta(
+    `🔍 **VIMANA (Búsqueda:)**\n\nNo hubo resultados automáticos para «${q}».\n\n${failHint}\n\nPuedes continuar en Yahoo:`,
+    [{ t: 'Buscar en Yahoo', u: yahooUrl(query) }],
+    ['ayuda', 'limpiar']
+  );
+}
+
+async function procesarSafe(pregunta, opts) {
+  try {
+    return await procesar(pregunta, opts || {});
+  } catch (e) {
+    console.error('procesar', e);
+    return {
+      reply: 'Namaste. 🙏 Hubo un momento de silencio. Inténtalo de nuevo en un instante.',
+      links: [],
+      options: ['ayuda', 'limpiar'],
+    };
+  }
+}
+
+module.exports = { procesar: procesarSafe, procesarRaw: procesar, getSearxInstances, getOwnSearx };
+
