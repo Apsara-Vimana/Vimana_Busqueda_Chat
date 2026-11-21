@@ -405,6 +405,13 @@
   <script>
   (function () {
     var API = '/api/chat';
+    var ACCESS_API = '/api/access';
+    var accessCode = '';
+    try { accessCode = localStorage.getItem('vimana_access') || ''; } catch (e) {}
+    var accessUnlocked = false;
+    var accessSessionId = '';
+    try { accessSessionId = localStorage.getItem('vimana_session') || ''; } catch (e2) {}
+
     function __renderJamendoTracks(tracks) {
       var trackBox = document.createElement('div');
       trackBox.className = 'jamendo-tracks';
@@ -1247,9 +1254,118 @@
       }
     }
 
+    function saveAccess(code, sessionId) {
+      accessCode = String(code || '').trim();
+      accessUnlocked = !!accessCode;
+      if (sessionId) accessSessionId = String(sessionId);
+      try {
+        localStorage.setItem('vimana_access', accessCode);
+        if (accessSessionId) localStorage.setItem('vimana_session', accessSessionId);
+      } catch (e) {}
+    }
+    function clearAccess() {
+      accessCode = '';
+      accessUnlocked = false;
+      accessSessionId = '';
+      try {
+        localStorage.removeItem('vimana_access');
+        localStorage.removeItem('vimana_session');
+      } catch (e) {}
+    }
+    function looksLikeAccessCode(t) {
+      var s = String(t || '').trim();
+      // llaves invitado o admin: 6–24 caracteres
+      return /^[A-Za-z][A-Za-z0-9_-]{5,23}$/.test(s) && !/\s/.test(s);
+    }
+    async function tryUnlock(code) {
+      try {
+        var r = await fetch(ACCESS_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code, sessionId: accessSessionId || undefined }),
+        });
+        var data = await r.json().catch(function () { return {}; });
+        if (r.ok && data.ok) {
+          saveAccess(code, data.sessionId || accessSessionId);
+          botBubble({
+            reply: data.reply || 'Namaste. Acceso activo. Ya puedes usar el chat.',
+            options: ['ayuda', 'vimana music', 'limpiar'],
+          });
+          return true;
+        }
+        botBubble({
+          reply: (data && data.reply) || 'Clave no válida. Pide tu clave a Vimana e inténtalo de nuevo.',
+          options: [],
+        });
+        return false;
+      } catch (e) {
+        botBubble({ reply: 'No pude validar la clave ahora. Reintenta en un momento.', options: [] });
+        return false;
+      }
+    }
+    function accessHeartbeat() {
+      if (!accessUnlocked || !accessCode) return;
+      fetch('/api/access/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: accessCode, sessionId: accessSessionId }),
+      }).catch(function () {});
+    }
+    setInterval(accessHeartbeat, 120000);
+    async function ensureAccessStatus() {
+      try {
+        var r = await fetch('/api/access/status');
+        var st = await r.json();
+        if (!st.required) {
+          accessUnlocked = true;
+          return;
+        }
+        if (accessCode) {
+          // revalidar código guardado
+          var ok = await tryUnlock(accessCode);
+          if (!ok) clearAccess();
+          return;
+        }
+        botBubble({
+          reply:
+            'Namaste. Para usar Apsara Vimana escribe tu clave de chat en la barra y pulsa enviar.\n\n' +
+            'Sin clave válida el servicio no responde. (La clave te la comparte el proyecto Vimana.)',
+          options: [],
+        });
+      } catch (e) {
+        // si el endpoint no existe aún, no bloquear
+        accessUnlocked = true;
+      }
+    }
+
+
     async function enviar() {
+
       var q = message.value.trim();
       if (!q || busy) return;
+
+      // Acceso por clave: primera prioridad
+      if (!accessUnlocked) {
+        var maybeCode = q;
+        if (looksLikeAccessCode(maybeCode) || /^clave\s+/i.test(maybeCode)) {
+          var codeOnly = maybeCode.replace(/^clave\s+/i, '').trim();
+          userBubble(q);
+          message.value = '';
+          message.style.height = 'auto';
+          setBusy(true);
+          await tryUnlock(codeOnly);
+          setBusy(false);
+          return;
+        }
+        userBubble(q);
+        message.value = '';
+        message.style.height = 'auto';
+        botBubble({
+          reply: 'Escribe primero tu clave de chat (solo la clave) y envía. Después podrás preguntar con normalidad.',
+          options: [],
+        });
+        return;
+      }
       userBubble(q);
       message.value = '';
       message.style.height = 'auto';
@@ -1340,7 +1456,7 @@
         var r = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q, adminMode: adminMode, history: collectHistory() }),
+          body: JSON.stringify({ q: q, accessCode: accessCode, sessionId: accessSessionId, adminMode: adminMode, history: collectHistory() }),
           signal: ctrl.signal
         });
         clearTimeout(to);

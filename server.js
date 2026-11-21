@@ -84,7 +84,7 @@ app.get('/api/ping', async (_req, res) => {
     neon: Boolean(process.env.DATABASE_URL),
     searx: searxBase() || null,
     openrouter: Boolean(process.env.OPENROUTER_API_KEY),
-    model: process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    llm: Boolean(process.env.OPENROUTER_API_KEY || process.env.LLM_API_KEY),
   });
 });
 
@@ -170,26 +170,49 @@ app.get('/api/access/status', (req, res) => {
 
 app.post('/api/access', (req, res) => {
   const code = (req.body && (req.body.code || req.body.clave || req.body.q)) || '';
-  const info = access.accessInfo(code);
+  const sessionId = (req.body && req.body.sessionId) || '';
   if (!access.accessRequired()) {
     return res.json({
       ok: true,
       reply: 'Acceso abierto (no hay claves configuradas en el servidor).',
-      pool: 'default',
+      pool: access.instancePool ? access.instancePool() : 'A',
+      sessionId: sessionId || ('open-' + Date.now()),
     });
   }
-  if (!info.ok) {
-    return res.status(401).json({
+  const result = access.openSession(code, sessionId || null);
+  if (!result.ok) {
+    const status = result.reason === 'limit' ? 429 : 401;
+    return res.status(status).json({
       ok: false,
-      reply: 'Clave no válida. Escribe en la barra tu clave de chat (la que te compartió Vimana) y pulsa enviar.',
+      reason: result.reason || 'invalid',
+      reply: result.reply,
     });
   }
   return res.json({
     ok: true,
-    reply: 'Namaste. Acceso activo. Ya puedes usar el chat de Apsara Vimana.',
-    pool: info.pool,
-    code: info.code,
+    reply: result.reply,
+    pool: result.pool || (access.instancePool && access.instancePool()),
+    sessionId: result.sessionId,
+    isAdmin: !!result.isAdmin,
   });
+});
+
+app.post('/api/access/heartbeat', (req, res) => {
+  const code = (req.body && (req.body.code || req.body.clave)) || '';
+  const sessionId = (req.body && req.body.sessionId) || '';
+  if (!access.accessRequired() || (access.isAdmin && access.isAdmin(code))) {
+    return res.json({ ok: true });
+  }
+  const r = access.heartbeat(code, sessionId);
+  if (!r.ok) return res.status(401).json({ ok: false, reason: r.reason || 'expired' });
+  return res.json({ ok: true, sessions: r.sessions });
+});
+
+app.post('/api/access/release', (req, res) => {
+  const code = (req.body && (req.body.code || req.body.clave)) || '';
+  const sessionId = (req.body && req.body.sessionId) || '';
+  if (access.releaseSession) access.releaseSession(code, sessionId);
+  return res.json({ ok: true });
 });
 
 app.post('/api/chat', async (req, res) => {
@@ -203,14 +226,39 @@ app.post('/api/chat', async (req, res) => {
     const adminMode = !!(req.body && (req.body.adminMode || req.body.admin));
     const history = (req.body && Array.isArray(req.body.history)) ? req.body.history : [];
 
-    if (access.accessRequired() && !access.isValidCode(accessCode)) {
-      return res.status(401).json({
-        reply:
-          'Introduce tu clave de chat en la barra y envía. Sin clave válida el servicio no responde.',
-        links: [],
-        options: [],
-        access: false,
-      });
+    const sessionId =
+      (req.body && (req.body.sessionId || req.body.session)) || '';
+    if (access.accessRequired()) {
+      if (!access.isValidCode(accessCode)) {
+        const wrong =
+          access.belongsToThisServer &&
+          !access.belongsToThisServer(accessCode) &&
+          access.normalizeCode(accessCode) &&
+          !access.isAdmin(accessCode);
+        return res.status(401).json({
+          reply: wrong
+            ? 'Esta clave no pertenece a este servidor.'
+            : 'Introduce tu llave de acceso en la barra y envía. Sin llave válida el servicio no responde.',
+          links: [],
+          options: [],
+          access: false,
+        });
+      }
+      if (access.sessionOk && !access.sessionOk(accessCode, sessionId) && !access.isAdmin(accessCode)) {
+        // intentar abrir sesión si hay cupo
+        const opened = access.openSession(accessCode, sessionId || null);
+        if (!opened.ok) {
+          return res.status(opened.reason === 'limit' ? 429 : 401).json({
+            reply: opened.reply || 'Sesión no válida. Vuelve a escribir tu llave.',
+            links: [],
+            options: [],
+            access: false,
+          });
+        }
+        // ok — sesión creada/renovada
+      } else if (access.heartbeat && sessionId) {
+        access.heartbeat(accessCode, sessionId);
+      }
     }
 
     const searxUrl = access.searxUrlForCode(accessCode);
@@ -243,9 +291,11 @@ app.listen(PORT, () => {
   console.log('Apsara Vimana on', PORT);
   console.log('SEARXNG_URL:', searxBase() || '(missing)');
   console.log(
-    'OPENROUTER:',
-    process.env.OPENROUTER_API_KEY ? 'key set' : 'no key'
+    'LLM:',
+    process.env.OPENROUTER_API_KEY || process.env.LLM_API_KEY ? 'key set' : 'no key'
   );
+  console.log('INSTANCE_POOL:', process.env.INSTANCE_POOL || 'A');
+  console.log('ACCESS:', access.accessRequired() ? 'keys required' : 'open');
   wakeSearx()
     .then((r) => console.log('wake-searx on boot:', r))
     .catch(() => {});
