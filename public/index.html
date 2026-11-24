@@ -583,11 +583,20 @@
       t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
       t = t.replace(/`([^`]+)`/g, '<code style="font-size:0.85em;background:#eef2f5;padding:0 0.25em;border-radius:3px;">$1</code>');
-      // links
+      // links (una sola vez; etiqueta corta en YouTube)
       t = t.replace(/(https?:\/\/[^\s<&]+)/g, function (u) {
         var clean = u.replace(/[)\],.;:!?]+$/g, '');
         var trail = u.slice(clean.length);
-        return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + clean + '</a>' + trail;
+        var label = clean;
+        if (/youtube\.com\/results\?search_query=/i.test(clean)) {
+          try {
+            var q = decodeURIComponent((clean.split('search_query=')[1] || '').replace(/\+/g, ' '));
+            if (q) label = '▶ YouTube: ' + q.slice(0, 48) + (q.length > 48 ? '…' : '');
+          } catch (e) { label = '▶ Abrir en YouTube'; }
+        } else if (/youtube\.com|youtu\.be/i.test(clean)) {
+          label = '▶ Abrir en YouTube';
+        }
+        return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + label + '</a>' + trail;
       });
       return t;
     }
@@ -712,10 +721,14 @@
       if (last < raw.length) elBubble.appendChild(document.createTextNode(raw.slice(last)));
     }
     function appendUrlButtons(col, text) {
+      // Evitar duplicar: formatBotHtml ya convierte las URLs del texto en enlaces clicables.
+      // Solo añadir botones si hay POCAS urls y el texto no las muestra ya de forma clara.
       var urls = extractHttpUrls(text).filter(function (u) {
         return !/jamendo\.com/i.test(u);
       });
       if (!urls.length) return;
+      // Listas largas de YouTube/Spotify: no repetir como bloque "▶ Abrir en YouTube"
+      if (urls.length >= 3) return;
       var box = document.createElement('div');
       box.className = 'yt-links';
       urls.forEach(function (u, i) {
