@@ -654,6 +654,11 @@
           i++;
           continue;
         }
+        // No mostrar rayas de tabla markdown crudas
+        if (/^\s*\|?[\s:\-|]+\|?[\s:\-|]*$/.test(line) && /---/.test(line)) {
+          i++;
+          continue;
+        }
         html += '<div class="fmt-line">' + formatInline(line) + '</div>';
         i++;
       }
@@ -902,7 +907,7 @@
 
     function downloadWordDoc(text, name) {
       try {
-        var body = String(text || lastBotText || '').trim();
+        var body = cleanTextForExport(text || lastBotText || '');
         if (!body) return;
         var html =
           '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Apsara Vimana</title></head><body>' +
@@ -938,44 +943,58 @@
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
       } catch (e) {}
     }
-        function downloadExcelDoc(text, name) {
+    function downloadExcelDoc(text, name) {
       try {
-        var body = String(text || lastBotText || '').trim();
+        var body = cleanTextForExport(text || lastBotText || '');
         if (!body) return;
         var lines = body.split(/\n/);
-        var rows = ['"N°","Título / sección","Detalle"'];
-        var n = 0;
-        var title = '';
-        var buf = [];
-        function flush() {
-          if (!title && !buf.length) return;
-          n++;
-          var det = buf.join(' ').replace(/\s+/g, ' ').trim();
-          rows.push(
-            '"' + n + '","' + String(title || 'Ítem ' + n).replace(/"/g, '""') + '","' + det.replace(/"/g, '""') + '"'
-          );
-          title = '';
-          buf = [];
-        }
+        var rows = [];
+        var tableMode = false;
+        // 1) Extraer tablas markdown | a | b |
         lines.forEach(function (line) {
-          var m = line.match(/^\s*(\d+)[\.\)\-]\s*(.+)$/);
-          if (m) {
-            flush();
-            title = m[2].trim();
-            return;
-          }
-          if (/^\s*#{1,3}\s+/.test(line) || /^\s*\*\*[^*]+\*\*\s*$/.test(line)) {
-            flush();
-            title = line.replace(/^\s*#{1,3}\s+/, '').replace(/\*\*/g, '').trim();
-            return;
-          }
-          if (line.trim()) buf.push(line.trim());
+          if (!/\|/.test(line)) return;
+          if (/^\s*\|?[\s:\-|]+\|/.test(line) && /---/.test(line)) return; // separador
+          var cells = line.split('|').map(function (c) { return c.trim(); });
+          if (cells[0] === '') cells.shift();
+          if (cells.length && cells[cells.length - 1] === '') cells.pop();
+          if (cells.length < 2) return;
+          tableMode = true;
+          rows.push(cells.map(function (c) {
+            return '"' + String(c).replace(/\*\*/g, '').replace(/"/g, '""') + '"';
+          }).join(','));
         });
-        flush();
+        if (!tableMode) {
+          rows = ['"N°","Sección","Contenido"'];
+          var n = 0, title = '', buf = [];
+          function flush() {
+            if (!title && !buf.length) return;
+            n++;
+            rows.push(
+              '"' + n + '","' + String(title || 'Nota').replace(/"/g, '""') + '","' +
+              buf.join(' ').replace(/\s+/g, ' ').replace(/"/g, '""') + '"'
+            );
+            title = ''; buf = [];
+          }
+          lines.forEach(function (line) {
+            if (/^\s*\|?[\s:\-|]+\|/.test(line) && /---/.test(line)) return;
+            var m = line.match(/^\s*(\d+)[\.\)\-]\s*(.+)$/);
+            if (m) { flush(); title = m[2].replace(/\*\*/g, '').trim(); return; }
+            if (/^\s*#{1,3}\s+/.test(line)) {
+              flush();
+              title = line.replace(/^\s*#{1,3}\s+/, '').replace(/\*\*/g, '').trim();
+              return;
+            }
+            if (line.trim()) buf.push(line.replace(/\*\*/g, '').trim());
+          });
+          flush();
+        }
         if (rows.length < 2) {
           rows = ['"Línea","Texto"'];
           lines.forEach(function (line, i) {
-            if (line.trim()) rows.push('"' + (i + 1) + '","' + line.replace(/"/g, '""') + '"');
+            var L = line.replace(/\*\*/g, '').trim();
+            if (L && !/^\|?[\s:\-|]+\|/.test(L)) {
+              rows.push('"' + (i + 1) + '","' + L.replace(/"/g, '""') + '"');
+            }
           });
         }
         var csv = '\ufeff' + rows.join('\n');
@@ -1060,6 +1079,11 @@
 
     function botBubble(data) {
       if (data && data.reply) {
+        var rr = String(data.reply);
+        if (/\{\s*"file_name"/i.test(rr) || /content":\s*"PK/i.test(rr) || /^UEsDB/i.test(rr.trim())) {
+          data.reply = 'Usa el botón ⬇ Descargar Word bajo el mensaje, o escribe descargar word. Así exportas sin regenerar todo el texto.';
+          data.options = ['descargar word', 'descargar excel', 'ayuda'];
+        }
         rememberExportText(data.reply);
         if (!isMetaBotReply(data.reply)) speakText(data.reply);
       }
@@ -1263,6 +1287,39 @@
         });
         col.appendChild(opts);
       }
+      // Botón manual Word (solo contenido de esta burbuja)
+      if (data && data.reply && !isMetaBotReply(data.reply) && String(data.reply).length > 80) {
+        var dl = el('div', 'options');
+        var bw = document.createElement('button');
+        bw.type = 'button';
+        bw.className = 'opt-chip chip-download';
+        bw.textContent = '⬇ Descargar Word';
+        (function (txt) {
+          bw.addEventListener('click', function () {
+            downloadWordDoc(cleanTextForExport(txt), 'apsara-vimana');
+            botBubble({
+              reply: 'Listo: Word descargado con este mensaje.',
+              options: ['ayuda'],
+            });
+          });
+        })(data.reply);
+        dl.appendChild(bw);
+        var be = document.createElement('button');
+        be.type = 'button';
+        be.className = 'opt-chip chip-download';
+        be.textContent = '⬇ Excel';
+        (function (txt) {
+          be.addEventListener('click', function () {
+            downloadExcelDoc(cleanTextForExport(txt), 'apsara-vimana');
+            botBubble({
+              reply: 'Listo: Excel/CSV descargado con este mensaje.',
+              options: ['ayuda'],
+            });
+          });
+        })(data.reply);
+        dl.appendChild(be);
+        col.appendChild(dl);
+      }
       row.appendChild(col);
       conversation.appendChild(row);
 
@@ -1298,14 +1355,21 @@
       busy = on;
       sendBtn.disabled = on || !message.value.trim();
       message.disabled = on;
-      typing.textContent = on ? 'Apsara está pensando…' : '';
+      typing.innerHTML = on
+        ? '<span class="loading-dots" aria-label="Cargando"><span></span><span></span><span></span></span>'
+        : '';
       var th = document.getElementById('thinkingHint');
       if (on) {
         if (!th) {
           th = document.createElement('div');
           th.id = 'thinkingHint';
           th.className = 'msg bot';
-          th.innerHTML = '<img class="avatar" src="index_files/2_fBUK.jpg" alt="Apsara"/><div style="max-width:88%"><div class="msg-image-wrap img-state"><img src="/imagenes/Pensando.jpg" alt="Pensando" onerror="this.parentNode.style.display=\'none\'"/></div><div class="bubble">Pensando…</div></div>';
+          th.innerHTML =
+            '<img class="avatar" src="index_files/2_fBUK.jpg" alt="Apsara"/>' +
+            '<div style="max-width:88%">' +
+            '<div class="bubble" style="min-width:72px">' +
+            '<span class="loading-dots"><span></span><span></span><span></span></span>' +
+            '</div></div>';
           conversation.appendChild(th);
           scrollBottom();
         }
@@ -1433,24 +1497,39 @@
       var qn = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
       // —— Descargas (cliente): siempre el contenido real, nunca el aviso "Listo:…" ——
-      function doDownload(fmt) {
-        var body = getTextForExport();
+      function doDownload(fmt, topicHint, fromPhrase, toPhrase) {
+        var body = getTextForExport(topicHint);
+        if (fromPhrase) body = sliceFromTo(body || getTextForExport(), fromPhrase, toPhrase);
+        body = cleanTextForExport(body);
         if (!body) {
-          botBubble({ reply: 'Aún no hay texto de Apsara para guardar. Pide primero el contenido (ej. pañcāṅga hoy o 5 recetas) y luego la descarga.', options: ['ayuda'] });
+          botBubble({
+            reply: 'No encontré ese fragmento en el chat. Escribe primero el tema (ej. nueve procesos de devoción) y luego: descargar word.',
+            options: ['descargar word', 'ayuda'],
+          });
           return;
         }
+        var fname = 'apsara-vimana';
+        if (topicHint) {
+          fname = String(topicHint).toLowerCase().replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '').slice(0, 40) || fname;
+        }
         if (fmt === 'word') {
-          downloadWordDoc(body, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: se descargó el archivo Word (.doc) con el contenido de la pantalla.', options: ['ayuda', 'limpiar'] });
+          downloadWordDoc(body, fname);
+          botBubble({
+            reply: 'Listo: Word descargado (solo el texto pedido, no toda la plática).',
+            options: ['descargar word', 'descargar excel', 'ayuda'],
+          });
         } else if (fmt === 'txt') {
-          downloadTxtDoc(body, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: archivo de texto (.txt) descargado.', options: ['ayuda', 'limpiar'] });
+          downloadTxtDoc(body, fname);
+          botBubble({ reply: 'Listo: archivo de texto (.txt) descargado.', options: ['ayuda'] });
         } else if (fmt === 'excel') {
-          downloadExcelDoc(body, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: archivo Excel/CSV (.csv) descargado. Ábrelo con Excel o LibreOffice.', options: ['ayuda', 'limpiar'] });
+          downloadExcelDoc(body, fname);
+          botBubble({
+            reply: 'Listo: Excel/CSV descargado (tablas y listas ordenadas). Ábrelo con Excel o LibreOffice.',
+            options: ['descargar word', 'ayuda'],
+          });
         } else if (fmt === 'ppt') {
-          downloadPptDoc(body, 'apsara-vimana-chat');
-          botBubble({ reply: 'Listo: presentación (.ppt) descargada.', options: ['ayuda', 'limpiar'] });
+          downloadPptDoc(body, fname);
+          botBubble({ reply: 'Listo: presentación descargada.', options: ['ayuda'] });
         }
       }
 
@@ -1507,14 +1586,21 @@
       ) wantFmt = 'ppt';
 
       if (wantFmt) {
-        if (isPureDownloadCommand(qn)) {
-          doDownload(wantFmt);
+        var topicHint = stripDownloadIntent(q);
+        // "desde X hasta Y"
+        var mFrom = qn.match(/\bdesde\s+[«"']?(.+?)[»"']?\s+hasta\s+[«"']?(.+?)[»"']?\s*$/);
+        var fromP = mFrom ? mFrom[1] : '';
+        var toP = mFrom ? mFrom[2] : '';
+        // Si el tema ya está en el chat → descargar YA sin llamar a la IA (rápido)
+        var local = topicHint ? findTextByTopic(topicHint) : getTextForExport();
+        if (local || isPureDownloadCommand(qn)) {
+          doDownload(wantFmt, topicHint || '', fromP, toP);
           return;
         }
-        // Hay tema + descarga (ej. "copia el pañcāṅga hoy… en word") → pedir contenido y luego exportar
-        q = stripDownloadIntent(q);
+        // Si no está en pantalla, pedir a la IA el tema y luego exportar
+        q = topicHint || q;
         window.__vimanaPendingDownload = wantFmt;
-        // sigue al fetch con q limpio
+        window.__vimanaPendingTopic = topicHint || '';
       } else if (
         /^(dame la descarga|descarga el chat|exportar chat|descargar|descarga|exportar)$/.test(qn.trim()) ||
         (/dame la descarga|quiero la descarga|exportar (el )?chat/.test(qn) &&
@@ -1550,8 +1636,10 @@
           botBubble(data);
           if (window.__vimanaPendingDownload) {
             var _fmt = window.__vimanaPendingDownload;
+            var _top = window.__vimanaPendingTopic || '';
             window.__vimanaPendingDownload = null;
-            setTimeout(function () { doDownload(_fmt); }, 120);
+            window.__vimanaPendingTopic = '';
+            setTimeout(function () { doDownload(_fmt, _top); }, 120);
           }
         } else {
           botBubble({
