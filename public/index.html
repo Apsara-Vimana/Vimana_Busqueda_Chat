@@ -1611,11 +1611,13 @@
       // Descarga: si solo pide formato → exporta buffer; si pide contenido+word → primero API
       var wantFmt = null;
       if (
-        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|pasame|pásame|dame).{0,50}(word|docx|\.doc\b)/.test(qn) ||
-        /(word|docx).{0,40}(descarga|descargar|archivo|exportar)/.test(qn) ||
+        /(descargar|descarga|exportar|copia|copiar|guardar|guarda|pasame|pásame|dame).{0,80}(word|docx|\.doc\b)/.test(qn) ||
+        /(word|docx).{0,50}(descarga|descargar|archivo|exportar)/.test(qn) ||
+        /archivo\s+(de\s+)?word/.test(qn) ||
         /^(descargar|descarga|exportar)\s+(en\s+)?word\b/.test(qn) ||
         qn === 'word' ||
-        /guarda en word/.test(qn)
+        /guarda en word/.test(qn) ||
+        /dame\s+(una\s+)?descarga/.test(qn) && /word|docx|archivo/.test(qn)
       ) wantFmt = 'word';
       else if (
         /(descargar|descarga|exportar|copia|copiar|guardar|guarda|dame).{0,50}(excel|csv|hoja de calculo|hoja de cálculo)/.test(qn) ||
@@ -1638,21 +1640,36 @@
       ) wantFmt = 'ppt';
 
       if (wantFmt) {
+        // YOCO: descarga = solo cliente, NUNCA IA / SearXNG / timeout
         var topicHint = stripDownloadIntent(q);
-        // "desde X hasta Y"
+        // "todo / toda la respuesta / el texto" = último mensaje del chat
+        if (/\b(todo|toda|el texto|la respuesta|este texto|esta respuesta|lo de arriba|lo anterior)\b/i.test(qn)) {
+          topicHint = '';
+        }
+        // ruido residual tras strip
+        if (topicHint && /^(en|un|una|el|la|los|las|de|del|y|a|al|me|lo)$/i.test(topicHint.trim())) {
+          topicHint = '';
+        }
         var mFrom = qn.match(/\bdesde\s+[«"']?(.+?)[»"']?\s+hasta\s+[«"']?(.+?)[»"']?\s*$/);
         var fromP = mFrom ? mFrom[1] : '';
         var toP = mFrom ? mFrom[2] : '';
-        // Si el tema ya está en el chat → descargar YA sin llamar a la IA (rápido)
-        var local = topicHint ? findTextByTopic(topicHint) : getTextForExport();
-        if (local || isPureDownloadCommand(qn)) {
-          doDownload(wantFmt, topicHint || '', fromP, toP);
+
+        var local = '';
+        if (topicHint && topicHint.length >= 4) {
+          local = findTextByTopic(topicHint);
+        }
+        if (!local) local = getTextForExport();
+
+        // Siempre intentar descarga local si hay texto en pantalla
+        if (local || getTextForExport()) {
+          doDownload(wantFmt, local ? topicHint : '', fromP, toP);
           return;
         }
-        // Si no está en pantalla, pedir a la IA el tema y luego exportar
-        q = topicHint || q;
-        window.__vimanaPendingDownload = wantFmt;
-        window.__vimanaPendingTopic = topicHint || '';
+        botBubble({
+          reply: 'Aún no hay un mensaje de Apsara para exportar. Escribe primero el tema y, cuando esté en pantalla, di: copiar en word y dame la descarga.',
+          options: ['ayuda'],
+        });
+        return;
       } else if (
         /^(dame la descarga|descarga el chat|exportar chat|descargar|descarga|exportar)$/.test(qn.trim()) ||
         (/dame la descarga|quiero la descarga|exportar (el )?chat/.test(qn) &&
