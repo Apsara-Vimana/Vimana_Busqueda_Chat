@@ -1433,8 +1433,8 @@
       if (kind === 'timeout') {
         botBubble({
           reply:
-            'Namasté. La red tardó un momento.\n\nPuedes **reintentar** la misma pregunta; si era una meditación o un tema local, a veces responde al segundo intento.',
-          options: lastUserQuery ? ['reintentar', 'ayuda', 'limpiar'] : ['quien es sai baba', 'ayuda', 'limpiar'],
+            'Namasté. La respuesta tardó más de lo esperado.\n\nToca **reintentar** (misma pregunta). Si pediste búsqueda por internet, el buscador en la nube a veces despierta al segundo intento.',
+          options: lastUserQuery ? ['reintentar', 'ayuda', 'limpiar'] : ['ayuda', 'limpiar'],
           image: '/imagenes/Reconectando.jpg',
           imageSize: 'state',
           imageAlt: 'Reconectando',
@@ -1785,13 +1785,15 @@
           showNetworkMsg('offline');
           return;
         }
-        // 1er intento
-        var res = await fetchOnce(42000, false);
-        // reintento rápido si falló (red inestable)
+        // Búsquedas web / IA pueden tardar más (SearXNG frío + respuesta)
+        var isWebQ = /busca(r)? por internet|busca(r)? en (la )?web|searxng|vinculos|vínculos|enlaces de internet/i.test(q);
+        var t1 = isWebQ ? 90000 : 55000;
+        var t2 = isWebQ ? 60000 : 40000;
+        var res = await fetchOnce(t1, false);
         if (!res.ok) {
           setBusy(true, 'reconnect');
-          await new Promise(function (r) { setTimeout(r, 600); });
-          res = await fetchOnce(35000, true);
+          await new Promise(function (r) { setTimeout(r, 500); });
+          res = await fetchOnce(t2, true);
         }
         if (res.ok && res.data) {
           if (lastNetworkFail) {
