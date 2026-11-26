@@ -1379,7 +1379,11 @@
       scrollToMsgStart(row);
     }
 
-    function setBusy(on) {
+    var lastNetworkFail = false;
+    var lastUserQuery = '';
+    try { lastUserQuery = sessionStorage.getItem('vimana_last_q') || ''; } catch (e) {}
+
+    function setBusy(on, mode) {
       busy = on;
       sendBtn.disabled = on || !message.value.trim();
       message.disabled = on;
@@ -1392,9 +1396,16 @@
           th = document.createElement('div');
           th.id = 'thinkingHint';
           th.className = 'msg bot';
+          var stateImg =
+            mode === 'reconnect'
+              ? '/imagenes/Reconectando.jpg'
+              : '/imagenes/Pensando.jpg';
           th.innerHTML =
             '<img class="avatar" src="index_files/2_fBUK.jpg" alt="Apsara"/>' +
             '<div style="max-width:88%">' +
+            '<div class="msg-image-wrap img-state"><img src="' +
+            stateImg +
+            '" alt="estado" onerror="this.parentNode.style.display=\'none\'"/></div>' +
             '<div class="bubble" style="min-width:72px">' +
             '<span class="loading-dots"><span></span><span></span><span></span></span>' +
             '</div></div>';
@@ -1405,6 +1416,51 @@
         th.remove();
       }
     }
+
+    function showNetworkMsg(kind, extra) {
+      if (kind === 'offline') {
+        botBubble({
+          reply:
+            'Namasté. Parece que la conexión se interrumpió.\n\nCuando vuelva la señal, escribe de nuevo o toca **reintentar** para continuar el tema donde quedamos.',
+          options: lastUserQuery ? ['reintentar', 'ayuda', 'limpiar'] : ['ayuda', 'limpiar'],
+          image: '/imagenes/Reconectando.jpg',
+          imageSize: 'state',
+          imageAlt: 'Reconectando',
+        });
+        lastNetworkFail = true;
+        return;
+      }
+      if (kind === 'timeout') {
+        botBubble({
+          reply:
+            'Namasté. La red tardó un momento.\n\nPuedes **reintentar** la misma pregunta; si era una meditación o un tema local, a veces responde al segundo intento.',
+          options: lastUserQuery ? ['reintentar', 'ayuda', 'limpiar'] : ['quien es sai baba', 'ayuda', 'limpiar'],
+          image: '/imagenes/Reconectando.jpg',
+          imageSize: 'state',
+          imageAlt: 'Reconectando',
+        });
+        lastNetworkFail = true;
+        return;
+      }
+      if (kind === 'restored') {
+        botBubble({
+          reply: extra || 'Señal restablecida. Ya podemos continuar donde quedamos. 🙏',
+          options: lastUserQuery ? ['reintentar', 'ayuda'] : ['ayuda'],
+          image: '/imagenes/Restablecido.jpg',
+          imageSize: 'state',
+          imageAlt: 'Restablecido',
+        });
+        lastNetworkFail = false;
+      }
+    }
+
+    window.addEventListener('offline', function () {
+      showNetworkMsg('offline');
+    });
+    window.addEventListener('online', function () {
+      if (lastNetworkFail) showNetworkMsg('restored');
+    });
+
 
     function saveAccess(code, sessionId) {
       accessCode = String(code || '').trim();
@@ -1688,21 +1744,64 @@
 
 
 
-      setBusy(true);
-      try {
+      // Continuidad de tema tras caída de red
+      if (/^reintentar$/i.test(qn) && lastUserQuery) {
+        q = lastUserQuery;
+        qn = (q || '').toLowerCase();
+      } else {
+        lastUserQuery = q;
+        try { sessionStorage.setItem('vimana_last_q', q); } catch (e) {}
+      }
+
+      async function fetchOnce(timeoutMs, reconnectMode) {
         var ctrl = new AbortController();
-        var to = setTimeout(function () { ctrl.abort(); }, 55000);
-        var r = await fetch(API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: q, accessCode: accessCode, sessionId: accessSessionId, adminMode: adminMode, history: collectHistory() }),
-          signal: ctrl.signal
-        });
-        clearTimeout(to);
-        var data = null;
-        try { data = await r.json(); } catch (e) { data = null; }
-        if (data && data.reply) {
-          botBubble(data);
+        var to = setTimeout(function () { ctrl.abort(); }, timeoutMs);
+        try {
+          var r = await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              q: q,
+              accessCode: accessCode,
+              sessionId: accessSessionId,
+              adminMode: adminMode,
+              history: collectHistory(),
+            }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(to);
+          var data = null;
+          try { data = await r.json(); } catch (e) { data = null; }
+          return { ok: !!(data && data.reply), data: data, status: r.status };
+        } catch (e) {
+          clearTimeout(to);
+          return { ok: false, data: null, error: e };
+        }
+      }
+
+      setBusy(true, navigator.onLine === false ? 'reconnect' : '');
+      try {
+        if (navigator.onLine === false) {
+          showNetworkMsg('offline');
+          return;
+        }
+        // 1er intento
+        var res = await fetchOnce(42000, false);
+        // reintento rápido si falló (red inestable)
+        if (!res.ok) {
+          setBusy(true, 'reconnect');
+          await new Promise(function (r) { setTimeout(r, 600); });
+          res = await fetchOnce(35000, true);
+        }
+        if (res.ok && res.data) {
+          if (lastNetworkFail) {
+            lastNetworkFail = false;
+            // imagen restablecido solo una vez tras fallo
+            res.data.image = res.data.image || '/imagenes/Restablecido.jpg';
+            res.data.imageSize = res.data.imageSize || 'state';
+            res.data.imageAlt = res.data.imageAlt || 'Restablecido';
+          }
+          botBubble(res.data);
           if (window.__vimanaPendingDownload) {
             var _fmt = window.__vimanaPendingDownload;
             var _top = window.__vimanaPendingTopic || '';
@@ -1710,17 +1809,11 @@
             window.__vimanaPendingTopic = '';
             setTimeout(function () { doDownload(_fmt, _top); }, 120);
           }
+        } else if (res.error && res.error.name === 'AbortError') {
+          showNetworkMsg('timeout');
         } else {
-          botBubble({
-            reply: 'Namaste. 🙏 No llegó respuesta. Prueba de nuevo o escribe *ayuda*.',
-            options: ['ayuda', 'limpiar'],
-          });
+          showNetworkMsg('timeout');
         }
-      } catch (e) {
-        botBubble({
-          reply: 'Namaste. 🙏 La respuesta está tardando más de lo habitual. Espera e inténtalo de nuevo (cartas y discursos pueden tardar ~20–40 s).',
-          options: ['quien es sai baba', 'ayuda', 'limpiar'],
-        });
       } finally {
         setBusy(false);
         message.focus();
