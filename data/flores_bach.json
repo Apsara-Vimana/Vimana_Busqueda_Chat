@@ -1,0 +1,280 @@
+{
+  "titulo": "Flores de Bach — 38 esencias + Rescue Remedy",
+  "aviso": "Uso educativo y de bienestar emocional. No sustituye consejo médico ni psicológico profesional.",
+  "flores": [
+    {
+      "nombre": "Agrimony",
+      "grupo_emocional": "Hipersensibilidad",
+      "estado_negativo": "Esconde tormento tras una sonrisa; evita conflictos y usa distracciones.",
+      "virtud_a_desarrollar": "Honestidad emocional y paz interior genuina.",
+      "afirmacion_o_enfoque": "Puedo mostrar lo que siento y seguir en paz."
+    },
+    {
+      "nombre": "Aspen",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Miedos vagos, presentimientos sin causa clara, ansiedad nocturna.",
+      "virtud_a_desarrollar": "Confianza y seguridad ante lo desconocido.",
+      "afirmacion_o_enfoque": "Estoy a salvo; confío en la vida."
+    },
+    {
+      "nombre": "Beech",
+      "grupo_emocional": "Preocupación excesiva",
+      "estado_negativo": "Crítica, intolerancia, juzga dureza en los demás.",
+      "virtud_a_desarrollar": "Tolerancia y compasión.",
+      "afirmacion_o_enfoque": "Veo la humanidad en cada persona."
+    },
+    {
+      "nombre": "Centaury",
+      "grupo_emocional": "Hipersensibilidad",
+      "estado_negativo": "Servicial hasta el agotamiento; no sabe decir no.",
+      "virtud_a_desarrollar": "Servicio con límites sanos.",
+      "afirmacion_o_enfoque": "Sirvo sin abandonarme."
+    },
+    {
+      "nombre": "Cerato",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "Duda de su intuición; pide consejo a todos.",
+      "virtud_a_desarrollar": "Confianza en la sabiduría interior.",
+      "afirmacion_o_enfoque": "Confío en mi propio saber."
+    },
+    {
+      "nombre": "Cherry Plum",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Miedo a perder el control, a explotar o volverse loco.",
+      "virtud_a_desarrollar": "Calma y dominio sereno.",
+      "afirmacion_o_enfoque": "Respiro; la calma vuelve."
+    },
+    {
+      "nombre": "Chestnut Bud",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Repite los mismos errores; no aprende de la experiencia.",
+      "virtud_a_desarrollar": "Atención y aprendizaje consciente.",
+      "afirmacion_o_enfoque": "Observo y aprendo esta vez."
+    },
+    {
+      "nombre": "Chicory",
+      "grupo_emocional": "Preocupación excesiva",
+      "estado_negativo": "Amor posesivo, control, necesidad de atención.",
+      "virtud_a_desarrollar": "Amor desinteresado.",
+      "afirmacion_o_enfoque": "Amo liberando, no aferrando."
+    },
+    {
+      "nombre": "Clematis",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Ensoñación, desconexión del presente, mente en el futuro.",
+      "virtud_a_desarrollar": "Presencia creativa aquí y ahora.",
+      "afirmacion_o_enfoque": "Estoy presente en este momento."
+    },
+    {
+      "nombre": "Crab Apple",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Sensación de impureza, asco de sí mismo, perfeccionismo.",
+      "virtud_a_desarrollar": "Aceptación y pureza interior.",
+      "afirmacion_o_enfoque": "Me acepto y me limpio con suavidad."
+    },
+    {
+      "nombre": "Elm",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Abrumado por responsabilidades, aunque suele ser capaz.",
+      "virtud_a_desarrollar": "Confianza ante la carga.",
+      "afirmacion_o_enfoque": "Un paso a la vez es suficiente."
+    },
+    {
+      "nombre": "Gentian",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "Desánimo tras un contratiempo; pesimismo fácil.",
+      "virtud_a_desarrollar": "Fe y perseverancia.",
+      "afirmacion_o_enfoque": "Los reveses no definen el camino."
+    },
+    {
+      "nombre": "Gorse",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "Desesperanza profunda, «ya no hay remedio».",
+      "virtud_a_desarrollar": "Esperanza renovada.",
+      "afirmacion_o_enfoque": "Aún hay una puerta abierta."
+    },
+    {
+      "nombre": "Heather",
+      "grupo_emocional": "Soledad",
+      "estado_negativo": "Necesidad de hablar de sí; absorbe atención.",
+      "virtud_a_desarrollar": "Escucha y empatía.",
+      "afirmacion_o_enfoque": "Puedo callar y escuchar."
+    },
+    {
+      "nombre": "Holly",
+      "grupo_emocional": "Hipersensibilidad",
+      "estado_negativo": "Celos, odio, sospecha, envidia.",
+      "virtud_a_desarrollar": "Amor incondicional.",
+      "afirmacion_o_enfoque": "El amor es más fuerte que el miedo."
+    },
+    {
+      "nombre": "Honeysuckle",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Añoranza del pasado, no vive el presente.",
+      "virtud_a_desarrollar": "Presencia y soltar el ayer.",
+      "afirmacion_o_enfoque": "El presente es mi hogar."
+    },
+    {
+      "nombre": "Hornbeam",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "Cansancio mental de anticipación; «no voy a poder con el día».",
+      "virtud_a_desarrollar": "Energía fresca para lo cotidiano.",
+      "afirmacion_o_enfoque": "Tengo fuerzas para este día."
+    },
+    {
+      "nombre": "Impatiens",
+      "grupo_emocional": "Soledad",
+      "estado_negativo": "Impaciencia, irritación con la lentitud de otros.",
+      "virtud_a_desarrollar": "Paciencia y suavidad.",
+      "afirmacion_o_enfoque": "Respiro; el ritmo es amigo."
+    },
+    {
+      "nombre": "Larch",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Expectativa de fracaso, falta de confianza.",
+      "virtud_a_desarrollar": "Confianza en la capacidad propia.",
+      "afirmacion_o_enfoque": "Puedo intentarlo y aprender."
+    },
+    {
+      "nombre": "Mimulus",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Miedos concretos conocidos (enfermedad, pobreza, hablar en público…).",
+      "virtud_a_desarrollar": "Valentía cotidiana.",
+      "afirmacion_o_enfoque": "Afronto este miedo con calma."
+    },
+    {
+      "nombre": "Mustard",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Melancolía profunda sin causa aparente.",
+      "virtud_a_desarrollar": "Alegría serena que vuelve.",
+      "afirmacion_o_enfoque": "Esta nube también pasa."
+    },
+    {
+      "nombre": "Oak",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Lucha agotadora sin rendirse; se exige demasiado.",
+      "virtud_a_desarrollar": "Fuerza con descanso.",
+      "afirmacion_o_enfoque": "Descansar también es valentía."
+    },
+    {
+      "nombre": "Olive",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Agotamiento total tras esfuerzo prolongado.",
+      "virtud_a_desarrollar": "Restauración profunda.",
+      "afirmacion_o_enfoque": "Recibo descanso y me recupero."
+    },
+    {
+      "nombre": "Pine",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Culpa, autorreproche, nunca es suficiente.",
+      "virtud_a_desarrollar": "Autoperdón y responsabilidad sana.",
+      "afirmacion_o_enfoque": "Me perdono y sigo con humildad."
+    },
+    {
+      "nombre": "Red Chestnut",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Miedo excesivo por el bienestar de seres queridos.",
+      "virtud_a_desarrollar": "Confianza en la protección de los demás.",
+      "afirmacion_o_enfoque": "Ellos también están cuidados."
+    },
+    {
+      "nombre": "Rock Rose",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Terror, pánico, emergencia.",
+      "virtud_a_desarrollar": "Coraje en la crisis.",
+      "afirmacion_o_enfoque": "El valor nace en el centro."
+    },
+    {
+      "nombre": "Rock Water",
+      "grupo_emocional": "Preocupación excesiva",
+      "estado_negativo": "Rigidez, autoexigencia, dogmas propios.",
+      "virtud_a_desarrollar": "Flexibilidad y fluidez.",
+      "afirmacion_o_enfoque": "Puedo ser firme y flexible."
+    },
+    {
+      "nombre": "Scleranthus",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "Indecisión entre dos opciones; oscilación.",
+      "virtud_a_desarrollar": "Decisión equilibrada.",
+      "afirmacion_o_enfoque": "Elijo y avanzo."
+    },
+    {
+      "nombre": "Star of Bethlehem",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Shock, trauma, consuelo necesario.",
+      "virtud_a_desarrollar": "Consuelo y reparación.",
+      "afirmacion_o_enfoque": "Recibo consuelo y me restauro."
+    },
+    {
+      "nombre": "Sweet Chestnut",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Angustia extrema, «noche oscura del alma».",
+      "virtud_a_desarrollar": "Liberación y renacer interior.",
+      "afirmacion_o_enfoque": "Después de la noche, la luz."
+    },
+    {
+      "nombre": "Vervain",
+      "grupo_emocional": "Preocupación excesiva",
+      "estado_negativo": "Entusiasmo excesivo, tensionado por ideales.",
+      "virtud_a_desarrollar": "Moderación inspirada.",
+      "afirmacion_o_enfoque": "Mi fuego es sereno y claro."
+    },
+    {
+      "nombre": "Vine",
+      "grupo_emocional": "Preocupación excesiva",
+      "estado_negativo": "Dominio, autoridad rígida sobre otros.",
+      "virtud_a_desarrollar": "Liderazgo respetuoso.",
+      "afirmacion_o_enfoque": "Guío sin imponer."
+    },
+    {
+      "nombre": "Walnut",
+      "grupo_emocional": "Hipersensibilidad",
+      "estado_negativo": "Dificultad en cambios; influencias ajenas.",
+      "virtud_a_desarrollar": "Protección en las transiciones.",
+      "afirmacion_o_enfoque": "Avanzo en mi cambio con claridad."
+    },
+    {
+      "nombre": "Water Violet",
+      "grupo_emocional": "Soledad",
+      "estado_negativo": "Orgullo reservado, distancia, aislamiento elegante.",
+      "virtud_a_desarrollar": "Conexión humilde con otros.",
+      "afirmacion_o_enfoque": "Puedo estar cerca sin perderme."
+    },
+    {
+      "nombre": "White Chestnut",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Pensamientos repetitivos, mente que no calla.",
+      "virtud_a_desarrollar": "Mente quieta y clara.",
+      "afirmacion_o_enfoque": "Los pensamientos pasan; yo observo."
+    },
+    {
+      "nombre": "Wild Oat",
+      "grupo_emocional": "Incertidumbre",
+      "estado_negativo": "No encuentra su vocación; tentado por muchos caminos.",
+      "virtud_a_desarrollar": "Claridad de propósito.",
+      "afirmacion_o_enfoque": "Mi camino se aclara al caminar."
+    },
+    {
+      "nombre": "Wild Rose",
+      "grupo_emocional": "Falta de interés",
+      "estado_negativo": "Apatía, resignación, «para qué».",
+      "virtud_a_desarrollar": "Interés vital y motivación.",
+      "afirmacion_o_enfoque": "La vida me invita de nuevo."
+    },
+    {
+      "nombre": "Willow",
+      "grupo_emocional": "Desaliento",
+      "estado_negativo": "Resentimiento, «por qué a mí», amargura.",
+      "virtud_a_desarrollar": "Responsabilidad y optimismo.",
+      "afirmacion_o_enfoque": "Suelto el rencor y elijo crear."
+    },
+    {
+      "nombre": "Rescue Remedy",
+      "grupo_emocional": "Miedo",
+      "estado_negativo": "Urgencias emocionales, shock, crisis (fórmula combinada).",
+      "virtud_a_desarrollar": "Estabilización inmediata.",
+      "afirmacion_o_enfoque": "En la crisis, vuelvo al centro.",
+      "nota": "Combinación clásica: Star of Bethlehem, Rock Rose, Impatiens, Cherry Plum, Clematis."
+    }
+  ]
+}

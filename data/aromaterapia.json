@@ -1,0 +1,227 @@
+{
+  "titulo": "Aromaterapia — aceites esenciales (uso educativo)",
+  "aviso": "No sustituye consejo médico. No ingerir aceites. Diluir siempre en piel. Embarazo, niños y mascotas: consultar profesional.",
+  "fuentes_inspiracion": [
+    "https://github.com/gilienv/EssOilDB",
+    "https://github.com/Sorbus-Avery/EssentialOilsDatabase"
+  ],
+  "aceites": [
+    {
+      "nombre": "Lavanda",
+      "cientifico": "Lavandula angustifolia",
+      "usos": [
+        "calma",
+        "sueño",
+        "relajación",
+        "piel"
+      ],
+      "precauciones": "Generalmente suave; diluir en piel sensible.",
+      "nota": "Amplia tradición en aromaterapia para nerviosismo y descanso."
+    },
+    {
+      "nombre": "Árbol del té",
+      "cientifico": "Melaleuca alternifolia",
+      "usos": [
+        "piel",
+        "limpieza",
+        "ambiente"
+      ],
+      "precauciones": "Nunca ingerir; diluir; puede irritar.",
+      "nota": "Aceite muy estudiado por su perfil antimicrobiano tópico."
+    },
+    {
+      "nombre": "Eucalipto",
+      "cientifico": "Eucalyptus globulus",
+      "usos": [
+        "respiración",
+        "vapor",
+        "frescor"
+      ],
+      "precauciones": "No en niños pequeños ni gatos; diluir.",
+      "nota": "Aroma mentolado; uso tradicional en ambientes."
+    },
+    {
+      "nombre": "Menta",
+      "cientifico": "Mentha piperita",
+      "usos": [
+        "claridad",
+        "frescor",
+        "digestión tópica diluida"
+      ],
+      "precauciones": "No en bebés; puede ser fuerte en mucosas.",
+      "nota": "Estimulante olfativo; usar con moderación."
+    },
+    {
+      "nombre": "Incienso",
+      "cientifico": "Boswellia sacra",
+      "usos": [
+        "meditación",
+        "centramiento",
+        "ritual"
+      ],
+      "precauciones": "Diluir en piel.",
+      "nota": "Asociado a práctica contemplativa y ambientación sagrada."
+    },
+    {
+      "nombre": "Sándalo",
+      "cientifico": "Santalum album",
+      "usos": [
+        "meditación",
+        "calma",
+        "base perfume"
+      ],
+      "precauciones": "Preferir fuentes sostenibles; diluir.",
+      "nota": "Nota base cálida; tradicional en sadhana."
+    },
+    {
+      "nombre": "Rosa",
+      "cientifico": "Rosa damascena",
+      "usos": [
+        "corazón emocional",
+        "ánimo",
+        "lujo olfativo"
+      ],
+      "precauciones": "Caro; diluir; fotosensibilidad baja.",
+      "nota": "Símbolo de apertura del corazón en muchas tradiciones."
+    },
+    {
+      "nombre": "Ylang ylang",
+      "cientifico": "Cananga odorata",
+      "usos": [
+        "relajación",
+        "ánimo",
+        "ambiente"
+      ],
+      "precauciones": "Puede dar dolor de cabeza en exceso.",
+      "nota": "Floral intenso; pocas gotas bastan."
+    },
+    {
+      "nombre": "Bergamota",
+      "cientifico": "Citrus bergamia",
+      "usos": [
+        "ánimo",
+        "estrés",
+        "ambiente"
+      ],
+      "precauciones": "Fotosensibilizante en piel (evitar sol).",
+      "nota": "Cítrico alegre; usar con cuidado tópico."
+    },
+    {
+      "nombre": "Naranja dulce",
+      "cientifico": "Citrus sinensis",
+      "usos": [
+        "ánimo",
+        "ambiente familiar",
+        "frescura"
+      ],
+      "precauciones": "Fotosensibilidad posible.",
+      "nota": "Cítrico suave y accesible."
+    },
+    {
+      "nombre": "Limón",
+      "cientifico": "Citrus limon",
+      "usos": [
+        "claridad",
+        "limpieza ambiente"
+      ],
+      "precauciones": "Fotosensibilizante.",
+      "nota": "Nota alta cítrica."
+    },
+    {
+      "nombre": "Romero",
+      "cientifico": "Rosmarinus officinalis",
+      "usos": [
+        "enfoque",
+        "ambiente de estudio"
+      ],
+      "precauciones": "Evitar en epilepsia no consultada; diluir.",
+      "nota": "Tradición de claridad mental."
+    },
+    {
+      "nombre": "Manzanilla romana",
+      "cientifico": "Chamaemelum nobile",
+      "usos": [
+        "calma",
+        "niños (diluido)",
+        "suavidad"
+      ],
+      "precauciones": "Alergia a asteráceas posible.",
+      "nota": "Muy suave comparada con otras."
+    },
+    {
+      "nombre": "Jazmín",
+      "cientifico": "Jasminum grandiflorum",
+      "usos": [
+        "ánimo",
+        "corazón",
+        "noche"
+      ],
+      "precauciones": "Absolutos intensos; diluir.",
+      "nota": "Floral nocturno asociado a elevación emocional."
+    },
+    {
+      "nombre": "Cedro",
+      "cientifico": "Cedrus atlantica",
+      "usos": [
+        "base",
+        "centramiento",
+        "ambiente"
+      ],
+      "precauciones": "Diluir.",
+      "nota": "Madera seca y estable."
+    },
+    {
+      "nombre": "Geranio",
+      "cientifico": "Pelargonium graveolens",
+      "usos": [
+        "equilibrio",
+        "ambiente",
+        "piel diluida"
+      ],
+      "precauciones": "Diluir.",
+      "nota": "Floral-herbal equilibrante."
+    },
+    {
+      "nombre": "Clavo",
+      "cientifico": "Syzygium aromaticum",
+      "usos": [
+        "ambiente",
+        "nota especiada"
+      ],
+      "precauciones": "Muy dermocáustico; máxima dilución.",
+      "nota": "Potente; uso experto."
+    },
+    {
+      "nombre": "Canela (corteza)",
+      "cientifico": "Cinnamomum verum",
+      "usos": [
+        "ambiente",
+        "nota cálida"
+      ],
+      "precauciones": "Irritante fuerte; no en piel sin expertise.",
+      "nota": "Mejor en difusor con poca cantidad."
+    },
+    {
+      "nombre": "Mirra",
+      "cientifico": "Commiphora myrrha",
+      "usos": [
+        "meditación",
+        "ritual",
+        "piel diluida"
+      ],
+      "precauciones": "Diluir; embarazo consultar.",
+      "nota": "Resina antigua de uso contemplativo."
+    },
+    {
+      "nombre": "Palo santo (aceite)",
+      "cientifico": "Bursera graveolens",
+      "usos": [
+        "ambiente",
+        "ritual",
+        "limpieza simbólica"
+      ],
+      "precauciones": "Fuentes sostenibles; diluir.",
+      "nota": "Uso cultural latinoamericano; respeto a origen."
+    }
+  ]
+}
